@@ -3,14 +3,21 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import path from "path";
 
 
 export default function Navbar() {
 
     const pathName = usePathname();
-
     const activeNavText: string = "#8e082d";
     const inactiveNavText: string = "white";
+   const getLinkColor = (linkPath: string) => {
+    if (pathName === linkPath) {
+        return "text-[#8e082d] font-bold";
+    } else {
+        return "text-white hover:text-[#8e082d]";
+    }
+};
 
 
     return (
@@ -31,11 +38,11 @@ export default function Navbar() {
                 </Link>
             </div>
 
-            <ul>
+            <ul className="flex flex-row gap-8">
                 <li>
                     <Link
                         href="/"
-                        className={`transition-colors duration-300 font-medium ${pathName === "/" ? "text-[#8e082d] font-bold" : "text-white hover:text-[#8e082d]"}`}
+                        className={`transition-colors duration-300 font-medium ${getLinkColor("/")}`}
                     >Dashboard
                     </Link>
                 </li>
@@ -43,15 +50,15 @@ export default function Navbar() {
                 <li>
                     <Link
                         href="/expenses"
-                        className={`transition-colors duration-300 font-medium ${pathName === "/expenses" ? "text-[#8e082d] font-bold" : "text-white hover:text-[#8e082d]"}`}
+                        className={`transition-colors duration-300 font-medium ${getLinkColor("/expenses")}`}
                     >Expenses
                     </Link>
                 </li>
 
                 <li>
                     <Link
-                        href="/expenses"
-                        className={`transition-colors duration-300 font-medium ${pathName === "/approvals" ? "text-[#8e082d] font-bold" : "text-white hover:text-[#8e082d]"}`}
+                        href="/approvals    "
+                        className={`transition-colors duration-300 font-medium ${getLinkColor("/approvals")}`}
                     >Approvals
                     </Link>
                 </li>
