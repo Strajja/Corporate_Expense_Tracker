@@ -3,14 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import path from "path";
 
 
 export default function Navbar() {
 
     const pathName = usePathname();
-    const activeNavText: string = "#8e082d";
-    const inactiveNavText: string = "white";
    const getLinkColor = (linkPath: string) => {
     if (pathName === linkPath) {
         return "text-[#8e082d] font-bold";
@@ -57,7 +54,7 @@ export default function Navbar() {
 
                 <li>
                     <Link
-                        href="/approvals    "
+                        href="/approvals"
                         className={`transition-colors duration-300 font-medium ${getLinkColor("/approvals")}`}
                     >Approvals
                     </Link>

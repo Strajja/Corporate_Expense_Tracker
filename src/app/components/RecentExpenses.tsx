@@ -11,7 +11,7 @@ interface Expense {
 
 const mockExpenses: Expense[] = [
     { id: 'TRX-001', description: 'Poslovni ručak sa klijentom', category: 'Reprezentacija', amount: 120.50, date: '2026-06-12', status: 'Odobreno' },
-    { id: 'TRX-002', description: 'Taksi do aerodroma', category: 'Prevoz', amount: 45.00, date: '2026-06-14', status: 'Na čekanju' },
+    { id: 'TRX-002', description: 'Taksi do aerodroma', category: 'Prevoz', amount: 45.00, date: '2026-06-14', status: 'Na cekanju' },
     { id: 'TRX-003', description: 'Kotizacija za konferenciju', category: 'Edukacija', amount: 350.00, date: '2026-06-15', status: 'Odbijeno' },
     { id: 'TRX-004', description: 'Kancelarijski materijal', category: 'Oprema', amount: 85.20, date: '2026-06-15', status: 'Odobreno' },
 ];
@@ -58,7 +58,6 @@ export default function RecentExpenses() {
                                 <td className="py-4 text-gray-500">{expense.date}</td>
                                 <td className="py-4 text-gray-900 font-bold">${expense.amount.toFixed(2)}</td>
                                 <td className="py-4">
-                                    {/* Dinamička "pilula" za status */}
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(expense.status)}`}>
                                         {expense.status}
                                     </span>
