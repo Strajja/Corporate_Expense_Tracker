@@ -1,37 +1,30 @@
 import React from 'react';
+import { Expense, mockExpenses } from '../data/mockData';
 
-interface Expense {
-    id: string;
-    description: string;
-    category: string;
-    amount: number;
-    date: string;
-    status: 'Odobreno' | 'Na cekanju' | 'Odbijeno';
+interface RecentExpensesProps{
+    noResize?:boolean;
+    data:any[];
 }
 
-const mockExpenses: Expense[] = [
-    { id: 'TRX-001', description: 'Poslovni ručak sa klijentom', category: 'Reprezentacija', amount: 120.50, date: '2026-06-12', status: 'Odobreno' },
-    { id: 'TRX-002', description: 'Taksi do aerodroma', category: 'Prevoz', amount: 45.00, date: '2026-06-14', status: 'Na cekanju' },
-    { id: 'TRX-003', description: 'Kotizacija za konferenciju', category: 'Edukacija', amount: 350.00, date: '2026-06-15', status: 'Odbijeno' },
-    { id: 'TRX-004', description: 'Kancelarijski materijal', category: 'Oprema', amount: 85.20, date: '2026-06-15', status: 'Odobreno' },
-];
 
-export default function RecentExpenses() {
+export default function RecentExpenses({noResize=false,data}:RecentExpensesProps) {
     const getStatusColor = (status: string) => {
 
         switch (status) {
             case 'Odobreno':
                 return 'bg-green-100 text-green-800';
-            case 'Na čekanju':
+            case 'Na cekanju':
                 return 'bg-yellow-100 text-yellow-800';
             case 'Odbijeno':
                 return 'bg-red-100 text-red-800';
         }
     };
 
+    const resizeClass=!noResize&&"resize-x overflow-auto";
+
     return (
         <div
-            className='bg-white mt-8 p-6 rounded-xl shadow-sm border border-gray-100 resize-x overflow-auto w-full max-w-full min-w-[300px]'>
+            className={`bg-white mt-8 p-6 rounded-xl shadow-sm border border-gray-100 ${resizeClass} w-full max-w-full min-w-[300px]`}>
             <h2
                 className='text-xl font-bold text-gray-900 mb-6'
             >Nedavni troskovi

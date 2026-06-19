@@ -1,6 +1,23 @@
+'use client';
+
 import AddExpenseForm from "@/app/components/AddExpenseForm";
+import RecentExpenses from "../components/RecentExpenses";
+import { useState } from "react";
+import { Expense, mockExpenses } from "../data/mockData";
+
+
 
 export default function ExpensePage(){
+
+  const [expenses,setExpenses]=useState<Expense[]>(mockExpenses);
+
+  function handleNoviTrosak(noviTrosak:any){
+    const kompletanTrosak={
+      ...noviTrosak,
+      mockExpenses
+    }
+  }
+
     return (
         <div
         className="p-8 w-full max-w-7xl mx-auto">
@@ -14,18 +31,12 @@ export default function ExpensePage(){
             
             <div
             className="lg:col-span-2">
-              <div
-              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full">
-                 <p
-                 className="text-gray-500"
-                 >Ovde ćemo kasnije prebaciti onu veliku tabelu sa filterima...
-                 </p>
-              </div>
+              <RecentExpenses noResize data={expenses}/>
             </div>
     
             <div
             className="lg:col-span-1">
-              <AddExpenseForm />
+              <AddExpenseForm onAddExpense={handleNoviTrosak}/>
             </div>
     
           </div>

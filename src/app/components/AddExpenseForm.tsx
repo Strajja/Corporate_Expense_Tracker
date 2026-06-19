@@ -3,25 +3,32 @@
 import React from 'react';
 import {z} from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {useForm} from "react-hook-form"
+import {useForm} from "react-hook-form";
+import RecentExpenses from './RecentExpenses';
 
-export default function AddExpenseForm(){
-    const handleSubmit=(e:React.FormEvent)=>{
-        e.preventDefault();
-        alert("Podaci su spremni za slanje na backend.");
-    };
+interface AddExpenseFormProps{
+    onAddExpense:(noviTrosak: any)=>void;
+}
+
+export default function AddExpenseForm({onAddExpense}:AddExpenseFormProps){
+    // const handleSubmit=(e:React.FormEvent)=>{
+    //     e.preventDefault();
+    //     alert("Podaci su spremni za slanje na backend.");
+    // };
 
     const expenseSchema=z.object({
         description:z.string().min(10, "Opis mora imati vise od 10 karaktera."),
-        amount:z.coerce.number().min(0,"Trosak ne moze biti negativan."),
-        category:z.string("Ne mozete ostavljati prazno polje.")
+        amount:z.coerce.number().min(0,"Trosak ne moze biti negativan.")
     });
 
     const {register, handleSubmit, formState:{errors}}=useForm({
         resolver:zodResolver(expenseSchema)
     });
 
-    
+    const onSubmit = (podaci: any)=>{
+        onAddExpense(podaci);
+    };
+
 
     return(
         <div
@@ -32,7 +39,7 @@ export default function AddExpenseForm(){
             </h2>
 
             <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className='flex flex-col gap-4'>
 
             <div>
@@ -44,8 +51,14 @@ export default function AddExpenseForm(){
                 type="text"
                 placeholder="Npr. poslovni rucak"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all"
-                required
+                {...register("description")}
                 />
+                {errors.description&&(
+                    <p className="text-red-500 text-xs font-medium">
+                        {errors.description.message as string}
+                    </p>
+                )
+                }
             </div>
 
             <div>
@@ -58,8 +71,14 @@ export default function AddExpenseForm(){
                 placeholder="0.00"
                 step="0.01"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all"
-                required
+                {...register("amount")}
                 />
+                {errors.amount&&(
+                    <p className="text-red-500 text-xs font-medium">
+                        {errors.amount.message as string}
+                    </p>
+                )
+                }
             </div>
 
             <div>

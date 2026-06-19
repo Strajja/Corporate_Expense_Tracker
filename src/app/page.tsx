@@ -1,5 +1,7 @@
 import SummaryCard from "./components/SummaryCard";
 import RecentExpenses from "./components/RecentExpenses";
+import { Expense, mockExpenses } from "./data/mockData";
+
 
 
 export default function Dashboard() {
@@ -44,7 +46,7 @@ export default function Dashboard() {
         />
         
       </div>
-      <RecentExpenses />
+      <RecentExpenses data={mockExpenses}/>
     </div>
 
   );
