@@ -6,27 +6,33 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {useForm} from "react-hook-form";
 import RecentExpenses from './RecentExpenses';
 
+const expenseSchema=z.object({
+    description:z.string().min(3, "Opis mora imati vise od 3 karaktera."),
+    amount:z.coerce.number().min(0,"Trosak ne moze biti negativan."),   
+    category:z.string().min(1, "Morate da izaberete.")
+});
+
+type ExpenseFormData=z.infer<typeof expenseSchema>;
 interface AddExpenseFormProps{
-    onAddExpense:(noviTrosak: any)=>void;
+    onAddExpense:(noviTrosak: ExpenseFormData)=>void;
 }
 
 export default function AddExpenseForm({onAddExpense}:AddExpenseFormProps){
+        
     // const handleSubmit=(e:React.FormEvent)=>{
     //     e.preventDefault();
     //     alert("Podaci su spremni za slanje na backend.");
     // };
 
-    const expenseSchema=z.object({
-        description:z.string().min(10, "Opis mora imati vise od 10 karaktera."),
-        amount:z.coerce.number().min(0,"Trosak ne moze biti negativan.")
-    });
+
 
     const {register, handleSubmit, formState:{errors}}=useForm({
         resolver:zodResolver(expenseSchema)
     });
 
-    const onSubmit = (podaci: any)=>{
+    const onSubmit = (podaci: ExpenseFormData)=>{
         onAddExpense(podaci);
+        console.log("Poslato");
     };
 
 
@@ -86,12 +92,19 @@ export default function AddExpenseForm({onAddExpense}:AddExpenseFormProps){
           >Kategorija
           </label>
           <select
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all">
-            <option>Reprezentacija</option>
-            <option>Prevoz</option>
-            <option>Oprema</option>
-            <option>Edukacija</option>
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all"
+          {...register("category")}>
+            <option value="Reprezentacije">Reprezentacija</option>
+            <option value="Prevoz">Prevoz</option>
+            <option value="Oprema">Oprema</option>
+            <option value="Edukacija">Edukacija</option>
           </select>
+          {errors.category&&(
+                    <p className="text-red-500 text-xs font-medium">
+                        {errors.category.message as string}
+                    </p>
+                )
+                }
         </div>
 
         <button 

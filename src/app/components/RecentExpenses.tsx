@@ -3,11 +3,12 @@ import { Expense, mockExpenses } from '../data/mockData';
 
 interface RecentExpensesProps{
     noResize?:boolean;
-    data:any[];
+    data:Expense[];
+    onDelete:(id:string)=>void;
 }
 
 
-export default function RecentExpenses({noResize=false,data}:RecentExpensesProps) {
+export default function RecentExpenses({noResize=false,data,onDelete}:RecentExpensesProps) {
     const getStatusColor = (status: string) => {
 
         switch (status) {
@@ -44,7 +45,7 @@ export default function RecentExpenses({noResize=false,data}:RecentExpensesProps
                         </tr>
                     </thead>
                     <tbody className="text-sm">
-                        {mockExpenses.map((expense) => (
+                        {data.map((expense) => (
                             <tr key={expense.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                 <td className="py-4 font-medium text-gray-900">{expense.description}</td>
                                 <td className="py-4 text-gray-500">{expense.category}</td>
@@ -55,6 +56,7 @@ export default function RecentExpenses({noResize=false,data}:RecentExpensesProps
                                         {expense.status}
                                     </span>
                                 </td>
+                                
                             </tr>
                         ))}
                     </tbody>

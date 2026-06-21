@@ -11,12 +11,16 @@ export default function ExpensePage(){
 
   const [expenses,setExpenses]=useState<Expense[]>(mockExpenses);
 
-  function handleNoviTrosak(noviTrosak:any){
-    const kompletanTrosak={
+const handleNoviTrosak = (noviTrosak: Omit<Expense, 'id' | 'date' | 'status'>) => {
+    
+  const kompletanTrosak: Expense = {
       ...noviTrosak,
-      mockExpenses
-    }
-  }
+      id: `TRX-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      status: "Na cekanju"
+  };
+  setExpenses([...expenses, kompletanTrosak]);
+};
 
     return (
         <div

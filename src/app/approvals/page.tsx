@@ -1,3 +1,3 @@
 export default function Approvals(){
-    return <h1>Expenses Page</h1>;
+    return <h1>There are approvals.</h1>;
 }
