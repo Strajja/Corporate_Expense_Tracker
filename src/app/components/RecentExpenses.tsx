@@ -1,5 +1,6 @@
 import React from 'react';
 import { Expense, mockExpenses } from '../data/mockData';
+import { convertSegmentPathToStaticExportFilename } from 'next/dist/shared/lib/segment-cache/segment-value-encoding';
 
 interface RecentExpensesProps{
     noResize?:boolean;
@@ -56,7 +57,16 @@ export default function RecentExpenses({noResize=false,data,onDelete}:RecentExpe
                                         {expense.status}
                                     </span>
                                 </td>
-                                
+                                {onDelete&&(
+                                <td>
+                                <button
+                                className="flex items-center rounded-full text-xs font-bold px-3 py-1 bg-red-500 text-white"
+                                onClick={()=>onDelete(expense.id)}>
+                                    Izbrisi
+                                </button>
+                                </td>
+                                )
+}
                             </tr>
                         ))}
                     </tbody>

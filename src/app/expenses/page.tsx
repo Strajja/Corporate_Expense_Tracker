@@ -2,48 +2,95 @@
 
 import AddExpenseForm from "@/app/components/AddExpenseForm";
 import RecentExpenses from "../components/RecentExpenses";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Expense, mockExpenses } from "../data/mockData";
 
 
 
-export default function ExpensePage(){
+export default function ExpensePage() {
 
-  const [expenses,setExpenses]=useState<Expense[]>(mockExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [isLoaded,setIsLoaded]=useState(false);
 
-const handleNoviTrosak = (noviTrosak: Omit<Expense, 'id' | 'date' | 'status'>) => {
-    
-  const kompletanTrosak: Expense = {
+  useEffect(()=>{
+
+    const snimljeniPodaci=localStorage.getItem("mojiTroskovi");
+
+    if(snimljeniPodaci){
+      setExpenses(JSON.parse(snimljeniPodaci));
+    }
+
+    setIsLoaded(true);
+  },[])
+
+  useEffect(()=>{
+
+    localStorage.setItem("mojiTroskovi",JSON.stringify(expenses));
+
+  },[expenses,isLoaded]);
+
+  
+
+  const handleNoviTrosak = (noviTrosak: Omit<Expense, 'id' | 'date' | 'status'>) => {
+
+    const kompletanTrosak: Expense = {
       ...noviTrosak,
       id: `TRX-${Date.now()}`,
       date: new Date().toISOString().split('T')[0],
       status: "Na cekanju"
+    };
+    setExpenses([...expenses, kompletanTrosak]);
   };
-  setExpenses([...expenses, kompletanTrosak]);
-};
 
-    return (
+  const handleBrisanjeTroska = (idZaBrisanje: string) => {
+    setExpenses(expenses.filter((trosak) => trosak.id !== idZaBrisanje));
+  };
+
+  const ukupanTrosak = expenses.reduce((zbir, trosak) => zbir + trosak.amount, 0);
+
+  return (
+    <div
+      className="p-8 w-full max-w-7xl mx-auto">
+      <h1
+        className="text-3xl font-bold text-gray-900 mb-8"
+      >Upravljanje Troškovima
+      </h1>
+
+      <div
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
         <div
-        className="p-8 w-full max-w-7xl mx-auto">
-          <h1
-          className="text-3xl font-bold text-gray-900 mb-8"
-          >Upravljanje Troškovima
-          </h1>
-          
-          <div
-          className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <div
-            className="lg:col-span-2">
-              <RecentExpenses noResize data={expenses}/>
+          className="lg:col-span-2">
+          <div className="bg-[#8e082d] text-white p-6 rounded-xl shadow-sm mb-8 flex justify-between items-center">
+            <div>
+              <p
+              className="text-sm text-white/80 uppercase tracking-wider font-bold mb-1"
+              >Ukupni troškovi
+              </p>
+              <h2
+              className="text-4xl font-extrabold"
+              >${ukupanTrosak.toFixed(2)}
+              </h2>
             </div>
-    
             <div
-            className="lg:col-span-1">
-              <AddExpenseForm onAddExpense={handleNoviTrosak}/>
+            className="p-4 bg-white/20 rounded-full">
+              <svg
+              className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+              strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+              </path>
+              </svg>
             </div>
-    
           </div>
+          <RecentExpenses noResize data={expenses} onDelete={handleBrisanjeTroska} />
         </div>
-      );
+
+        <div
+          className="lg:col-span-1">
+          <AddExpenseForm onAddExpense={handleNoviTrosak} />
+        </div>
+
+      </div>
+    </div>
+  );
 }
