@@ -3,7 +3,7 @@
 import AddExpenseForm from "@/app/components/AddExpenseForm";
 import RecentExpenses from "../components/RecentExpenses";
 import { useState, useEffect } from "react";
-import { Expense, mockExpenses } from "../data/mockData";
+import { Expense } from "../data/mockData";
 
 
 
@@ -11,6 +11,8 @@ export default function ExpensePage() {
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoaded,setIsLoaded]=useState(false);
+  const [kategorijaFilter,setKategorijaFilter]=useState("Sve");
+  const [statusFilter,setStatusFilter]=useState("Sve");
 
   useEffect(()=>{
 
@@ -46,7 +48,27 @@ export default function ExpensePage() {
     setExpenses(expenses.filter((trosak) => trosak.id !== idZaBrisanje));
   };
 
-  const ukupanTrosak = expenses.reduce((zbir, trosak) => zbir + trosak.amount, 0);
+  const filtriraniTroskovi=kategorijaFilter==="Sve"?
+  expenses
+  :expenses.filter((trosak)=>trosak.category===kategorijaFilter);
+
+  const ukupanTrosak = filtriraniTroskovi.reduce((zbir, trosak) => zbir + trosak.amount, 0);
+
+  const filtrirajStatus= statusFilter==="Svi statusi"?
+  expenses
+  :expenses.filter((trosak)=>trosak.status===statusFilter);
+
+  const getStatusColor = (status: string) => {
+
+    switch (status) {
+        case 'Odobreno':
+            return 'bg-green-100 text-green-800';
+        case 'Na cekanju':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'Odbijeno':
+            return 'bg-red-100 text-red-800';
+    }
+};
 
   return (
     <div
@@ -82,7 +104,41 @@ export default function ExpensePage() {
               </svg>
             </div>
           </div>
-          <RecentExpenses noResize data={expenses} onDelete={handleBrisanjeTroska} />
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+    {["Sve", "Reprezentacije", "Prevoz", "Oprema", "Edukacija"].map((kategorija) => (
+        <button
+            key={kategorija}
+            onClick={() => setKategorijaFilter(kategorija)}
+            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
+                kategorijaFilter === kategorija 
+                ? "bg-black text-white" 
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+        >
+            {kategorija}
+        </button>
+    ))}
+</div>
+
+
+
+<div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+  <select className='px-3 py-1 rounded-full text-m font-bold'>
+    {["Svi statusi", "Na cekanju", "Odobreno", "Odbijeno"].map((status) => (
+      <option key={status}
+      onChange={()=>setStatusFilter(status)}
+      className={`px-3 py-1 rounded-full text-m font-bold ${getStatusColor(status)}}`}
+      >
+        {status}
+      </option>
+           
+        
+    ))}
+    </select>
+</div>
+
+
+          <RecentExpenses noResize data={filtriraniTroskovi} onDelete={handleBrisanjeTroska} />
         </div>
 
         <div
