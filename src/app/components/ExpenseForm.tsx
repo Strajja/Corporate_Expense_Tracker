@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from "react-hook-form";
 import { Expense } from '../data/mockData'; 
 
+
 const expenseSchema = z.object({
     description: z.string().min(3, "Opis mora imati vise od 3 karaktera."),
     amount: z.coerce.number().min(0, "Trosak ne moze biti negativan."),
@@ -21,7 +22,6 @@ interface ExpenseFormProps {
 
 export default function ExpenseForm({ onSave, trosakZaIzmenu }: ExpenseFormProps) {
 
-    // DODATO: Izvukli smo "reset" funkciju iz useForm
     const { register, handleSubmit, reset, formState: { errors } } = useForm<ExpenseFormData>({
         resolver: zodResolver(expenseSchema),
         defaultValues: {
