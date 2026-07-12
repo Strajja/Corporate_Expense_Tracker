@@ -3,12 +3,19 @@ import Footer from "./components/Footer";
 import "./globals.css";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Main application layout wrapping all children with Navbar and Footer components.
   return (
-    <html lang="en">
-      <body className="flex flex-col min-h-screen"> 
+    <html
+      lang="en"
+    >
+      <body
+        className="flex flex-col min-h-screen"
+      > 
         <Navbar />
         
-        <main className="flex-grow">
+        <main
+          className="flex-grow"
+        >
           {children}
         </main>
         
