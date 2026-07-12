@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [registerStep, setRegisterStep] = useState(1);
   const [role, setRole] = useState<'employee' | 'manager'>('employee');
   const [inviteCode, setInviteCode] = useState('');
   const [username, setUsername] = useState('');
@@ -36,36 +37,50 @@ export default function AuthPage() {
     return regex.test(pass);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleVerifyCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    if (inviteCode === 'SAP2026') {
+      setRegisterStep(2);
+    } else {
+      setError('Neispravan ili istekao pozivni kod.');
+    }
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (isLogin) {
-      if (!username || !password) {
-        setError('Molimo popunite sva polja.');
-        return;
-      }
-      localStorage.setItem('user_role', role);
-      localStorage.setItem('username', username);
-      router.push('/');
-    } else {
-      if (!inviteCode || !username || !password || !confirmPassword) {
-        setError('Molimo popunite sva polja.');
-        return;
-      }
-      if (password !== confirmPassword) {
-        setError('Lozinke se ne poklapaju.');
-        return;
-      }
-      if (!validatePassword(password)) {
-        setError('Lozinka mora imati min 8 karaktera, veliko slovo, broj i specijalni znak.');
-        return;
-      }
-      
-      localStorage.setItem('user_role', 'employee');
-      localStorage.setItem('username', username);
-      router.push('/');
+    if (!username || !password) {
+      setError('Molimo popunite sva polja.');
+      return;
     }
+    localStorage.setItem('user_role', role);
+    localStorage.setItem('username', username);
+    router.push('/');
+  };
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!username || !password || !confirmPassword) {
+      setError('Molimo popunite sva polja.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Lozinke se ne poklapaju.');
+      return;
+    }
+    if (!validatePassword(password)) {
+      setError('Lozinka mora imati min 8 karaktera, veliko slovo, broj i specijalni znak.');
+      return;
+    }
+    
+    localStorage.setItem('user_role', 'employee');
+    localStorage.setItem('username', username);
+    router.push('/');
   };
 
   const selectedLabel = options.find(opt => opt.value === role)?.label;
@@ -88,58 +103,30 @@ export default function AuthPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {!isLogin && (
+        {isLogin ? (
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Kod za registraciju</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Korisničko ime</label>
               <input
                 type="text"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
-                placeholder="Unesite kod iz email-a"
               />
             </div>
-          )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Korisničko ime</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
-              placeholder="npr. strahinja"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Lozinka</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {!isLogin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Potvrdite lozinku</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Lozinka</label>
               <input
                 type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
-                placeholder="••••••••"
               />
             </div>
-          )}
 
-          {isLogin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Izaberite ulogu (Simulacija)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Izaberite ulogu</label>
               <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
@@ -180,20 +167,76 @@ export default function AuthPage() {
                 )}
               </div>
             </div>
-          )}
 
-          <button
-            type="submit"
-            className="w-full mt-2 py-3 px-4 bg-[#8e082d] hover:bg-red-900 text-white font-medium rounded-lg transition shadow-sm"
-          >
-            {isLogin ? 'Pristupi sistemu' : 'Kreiraj nalog'}
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="w-full mt-2 py-3 px-4 bg-[#8e082d] hover:bg-red-900 text-white font-medium rounded-lg transition shadow-sm"
+            >
+              Pristupi sistemu
+            </button>
+          </form>
+        ) : registerStep === 1 ? (
+          <form onSubmit={handleVerifyCode} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Kod za registraciju</label>
+              <input
+                type="text"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
+                placeholder="Unesite kod iz email-a (npr. SAP2026)"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full mt-2 py-3 px-4 bg-[#8e082d] hover:bg-red-900 text-white font-medium rounded-lg transition shadow-sm"
+            >
+              Verifikuj kod
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Korisničko ime</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Lozinka</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Potvrdite lozinku</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full mt-2 py-3 px-4 bg-[#8e082d] hover:bg-red-900 text-white font-medium rounded-lg transition shadow-sm"
+            >
+              Kreiraj nalog
+            </button>
+          </form>
+        )}
 
         <div className="mt-6 text-center">
           <button
             onClick={() => {
               setIsLogin(!isLogin);
+              setRegisterStep(1);
               setError('');
               setUsername('');
               setPassword('');
@@ -208,4 +251,4 @@ export default function AuthPage() {
       </div>
     </div>
   );
-}       
+}
