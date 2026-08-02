@@ -1,5 +1,6 @@
 package com.cet.cet_backend.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,9 +25,11 @@ public class UserDto {
 
     private String username;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
 
-    private LocalTime hireDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate hireDate;
 
     private String role;
 
