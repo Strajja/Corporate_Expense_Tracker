@@ -3,6 +3,7 @@ package com.cet.cet_backend.controllers;
 import com.cet.cet_backend.domain.dto.ExpenseDto;
 import com.cet.cet_backend.domain.entities.Status;
 import com.cet.cet_backend.services.ExpenseService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class ExpenseController {
     }
 
     @PostMapping(path="/expenses")
-    public ResponseEntity<ExpenseDto> createExpense(@RequestBody ExpenseDto expenseDto){
+    public ResponseEntity<ExpenseDto> createExpense(@Valid @RequestBody ExpenseDto expenseDto){
         expenseDto=expenseService.createExpense(expenseDto);
 
         return new ResponseEntity<>(expenseDto, HttpStatus.CREATED);

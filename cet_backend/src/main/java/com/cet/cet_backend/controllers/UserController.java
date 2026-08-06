@@ -4,6 +4,7 @@ import com.cet.cet_backend.domain.dto.UserDto;
 import com.cet.cet_backend.domain.entities.UserEntity;
 import com.cet.cet_backend.mappers.Mapper;
 import com.cet.cet_backend.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,21 +23,21 @@ public class UserController {
         this.userService = userService;
     }
 
-@PostMapping(path="/users")
-public ResponseEntity<UserDto> registerUser(@RequestBody UserDto userDto){
+    @PostMapping(path="/users")
+    public ResponseEntity<UserDto> registerUser(@Valid @RequestBody UserDto userDto){
 
         UserDto createdUser= userService.registerUser(userDto);
 
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
 
-}
+    }
 
-@GetMapping(path="/users")
+    @GetMapping(path="/users")
     public  ResponseEntity<List<UserDto>> getAllUsers(){
 
-       List <UserDto> users = userService.findAllUsers();
+        List <UserDto> users = userService.findAllUsers();
 
-       return new ResponseEntity<>(users, HttpStatus.OK);
-}
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
 
 }
