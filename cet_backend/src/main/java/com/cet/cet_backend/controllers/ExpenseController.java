@@ -4,13 +4,19 @@ import com.cet.cet_backend.domain.dto.ExpenseDto;
 import com.cet.cet_backend.domain.entities.Status;
 import com.cet.cet_backend.services.ExpenseService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
+@RequestMapping(path = "/expenses")
 public class ExpenseController {
 
     private final ExpenseService expenseService;
@@ -19,50 +25,42 @@ public class ExpenseController {
         this.expenseService = expenseService;
     }
 
-    @PostMapping(path="/expenses")
-    public ResponseEntity<ExpenseDto> createExpense(@Valid @RequestBody ExpenseDto expenseDto){
-        expenseDto=expenseService.createExpense(expenseDto);
+    @PostMapping
+    public CompletableFuture<ResponseEntity<ExpenseDto>> createExpense(@Valid @RequestBody ExpenseDto expenseDto) {
 
-        return new ResponseEntity<>(expenseDto, HttpStatus.CREATED);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        return expenseService.createExpense(expenseDto, currentUsername)
+                .thenApply(savedExpense->ResponseEntity.status(HttpStatus.CREATED).body(savedExpense));
     }
 
-    @GetMapping(path="/expenses")
-    public ResponseEntity<List<ExpenseDto>> getAllExpenses(){
-        List<ExpenseDto> expenses=expenseService.findAllExpenses();
-
-        return new ResponseEntity<>(expenses, HttpStatus.OK);
+    @GetMapping
+    public ResponseEntity<Page<ExpenseDto>> getMyExpenses(Pageable pageable) {
+        return ResponseEntity.ok(expenseService.findAllExpenses(pageable));
     }
 
-    @GetMapping(path="/expenses/employee/{employeeId}")
-    public ResponseEntity<List<ExpenseDto>> getExpense(@PathVariable("employeeId") Long employeeId){
-        List<ExpenseDto> expenses=expenseService.findExpensesByEmployeeId(employeeId);
-
-        return new ResponseEntity<>(expenses, HttpStatus.OK);
-    }
-
-    @PatchMapping(path="/expenses/{id}/status")
-    public ResponseEntity<ExpenseDto> updateExpenseStatus(@PathVariable("id") Long id, @RequestParam Status newStatus){
-
-        ExpenseDto expenseDto=expenseService.updateExpenseStatus(id,newStatus);
-
-        return new ResponseEntity<>(expenseDto, HttpStatus.OK);
-    }
-
-    @DeleteMapping(path="/expenses/{expenseId}")
-    public ResponseEntity<Void> deleteExpense(@PathVariable("expenseId") Long expenseId){
-
+    @DeleteMapping(path = "/{id}")
+    public ResponseEntity<Void> deleteExpense(@PathVariable("id") Long expenseId) {
         expenseService.deleteExpense(expenseId);
-
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping(path = "/expenses/team")
-    public ResponseEntity<List<ExpenseDto>> getAllTeamExpenses(@RequestParam List<Long>employeeIds, @RequestParam  Status status){
+    @PatchMapping(path = "/{id}/status")
+    public ResponseEntity<ExpenseDto> updateExpenseStatus(
+            @PathVariable("id") Long expenseId,
+            @RequestParam("status") Status newStatus) {
 
-        List<ExpenseDto> expenses= expenseService.findPendingExpensesForTeam(employeeIds,status);
+        ExpenseDto updatedExpense = expenseService.updateExpenseStatus(expenseId, newStatus);
+        return ResponseEntity.ok(updatedExpense);
+    }
 
-        return new ResponseEntity<>(HttpStatus.OK);
+    @GetMapping(path = "/team")
+    public ResponseEntity<List<ExpenseDto>> getTeamPendingExpenses(
+            @RequestParam("employeeIds") List<Long> employeeIds,
+            @RequestParam("status") Status status) {
 
+        List<ExpenseDto> teamExpenses = expenseService.findPendingExpensesForTeam(employeeIds, status);
+        return ResponseEntity.ok(teamExpenses);
     }
 }

@@ -4,6 +4,7 @@ import com.cet.cet_backend.domain.dto.UserDto;
 import com.cet.cet_backend.domain.entities.UserEntity;
 import com.cet.cet_backend.mappers.Mapper;
 import com.cet.cet_backend.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,23 +17,22 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final Mapper<UserEntity, UserDto> userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, Mapper<UserEntity, UserDto> userMapper) {
+    public UserServiceImpl(UserRepository userRepository, Mapper<UserEntity, UserDto> userMapper,  PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public UserDto registerUser(UserDto userDto) {
-        if(userRepository.findByEmailAddress(userDto.getEmailAddress()).isPresent()){
-            throw new RuntimeException("Korisnik vec postoji");
-        }
-
         UserEntity userEntity = userMapper.mapFrom(userDto);
 
-        UserEntity savedUserEntity = userRepository.save(userEntity);
+        userEntity.setPassword(passwordEncoder.encode(userDto.getPassword()));
 
-        return userMapper.mapTo(savedUserEntity);
+        UserEntity savedUser = userRepository.save(userEntity);
+        return userMapper.mapTo(savedUser);
     }
 
     @Override

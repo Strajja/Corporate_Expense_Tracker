@@ -17,13 +17,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
 
+        HttpStatus status = HttpStatus.NOT_FOUND;
+
+        if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("access denied")) {
+            status = HttpStatus.FORBIDDEN;
+        }
+
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .status(HttpStatus.NOT_FOUND.value())
+                .status(status.value())
                 .message(ex.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponse, status);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

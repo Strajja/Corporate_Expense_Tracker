@@ -1,8 +1,6 @@
 package com.cet.cet_backend.controllers;
 
 import com.cet.cet_backend.domain.dto.UserDto;
-import com.cet.cet_backend.domain.entities.UserEntity;
-import com.cet.cet_backend.mappers.Mapper;
 import com.cet.cet_backend.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -10,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class UserController {
@@ -23,7 +20,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping(path="/users")
+    @PostMapping(path="/users/register")
     public ResponseEntity<UserDto> registerUser(@Valid @RequestBody UserDto userDto){
 
         UserDto createdUser= userService.registerUser(userDto);
