@@ -12,8 +12,15 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.MvcResult;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -26,7 +33,7 @@ class ExpenseControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
     @MockitoBean
     private ExpenseService expenseService;
@@ -40,21 +47,35 @@ class ExpenseControllerTest {
         ExpenseDto inputDto = new ExpenseDto();
         inputDto.setAmount(BigDecimal.valueOf(1250.0));
         inputDto.setCategory("OFFICE_SUPPLIES");
+        inputDto.setDescription("Office equipment purchase");
+        inputDto.setDate(LocalDate.now());
+        inputDto.setEmployeeId(1L);
+        inputDto.setStatus("PENDING");
 
         ExpenseDto outputDto = new ExpenseDto();
+        outputDto.setCategory("OFFICE_SUPPLIES");
         outputDto.setId(5L);
         outputDto.setAmount(BigDecimal.valueOf(1250.0));
-        outputDto.setCategory("OFFICE_SUPPLIES");
 
-        Mockito.when(expenseService.createExpense(Mockito.any(ExpenseDto.class))).thenReturn(outputDto);
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken("test-user@email.com", null, java.util.Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        mockMvc.perform(post("/expenses")
+        Mockito.when(expenseService.createExpense(Mockito.any(ExpenseDto.class), Mockito.eq("test-user@email.com")))
+                .thenReturn(CompletableFuture.completedFuture(outputDto));
+
+        MvcResult mvcResult = mockMvc.perform(post("/expenses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(inputDto)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
 
-                .andExpect(status().isOk())
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(5L))
                 .andExpect(jsonPath("$.category").value("OFFICE_SUPPLIES"));
+
+        SecurityContextHolder.clearContext();
     }
 
 

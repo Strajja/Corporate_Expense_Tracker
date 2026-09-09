@@ -11,11 +11,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,6 +34,9 @@ public class ExpenseServiceImplTest {
 
     @Mock
     private Mapper<ExpenseEntity, ExpenseDto> expenseMapper;
+
+    @Mock
+    private RabbitTemplate rabbitTemplate;
 
     @InjectMocks
     private ExpenseServiceImpl expenseService;
@@ -50,9 +55,9 @@ public class ExpenseServiceImplTest {
         outputDto.setId(50L);
 
         Authentication  authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("username");
+        lenient().when(authentication.getName()).thenReturn("username");
         SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
+        lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
         when(userRepository.findByUsername("username")).thenReturn(Optional.of(mockUser));
@@ -60,7 +65,9 @@ public class ExpenseServiceImplTest {
         when(expenseRepository.save(mappedEntity)).thenReturn(savedEntity);
         when(expenseMapper.mapTo(savedEntity)).thenReturn(outputDto);
 
-        ExpenseDto result=expenseService.createExpense(inputDto);
+        CompletableFuture<ExpenseDto> futureResult=expenseService.createExpense(inputDto, mockUser.getUsername());
+
+        ExpenseDto result=futureResult.join();
 
         assertNotNull(result);
         assertEquals(50L, result.getId());
