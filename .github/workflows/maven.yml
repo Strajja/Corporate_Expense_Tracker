@@ -23,4 +23,6 @@ jobs:
 
     - name: Build with Maven
       working-directory: ./cet_backend
-      run: ./mvnw clean package
+      run: |
+          chmod +x mvnw
+          ./mvnw clean package
