@@ -25,7 +25,7 @@ public class NotificationService {
 //
 //    }
 
-    @RabbitListener(queues = RabbitMQConfig.EXPENSE_QUEUE)
+//    @RabbitListener(queues = RabbitMQConfig.EXPENSE_QUEUE)
     public void processExpenseNotification(String message) {
         System.out.println("[Radnik] Preuzeo zadatak: " + message);
 

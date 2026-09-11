@@ -1,6 +1,7 @@
 package com.cet.cet_backend.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.support.converter.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -33,6 +34,11 @@ public class RabbitMQConfig {
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", DLQ)
                 .build();
+    }
+
+    @Bean
+    public MessageConverter jsonMessageConverter(){
+        return new JacksonJsonMessageConverter();
     }
 }
 

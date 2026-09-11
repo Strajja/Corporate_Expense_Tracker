@@ -49,11 +49,11 @@ public class ExpenseServiceImpl implements ExpenseService {
         expenseEntity.setEmployee(employee);
 
         ExpenseEntity savedExpense = expenseRepository.save(expenseEntity);
+        ExpenseDto outputDto = expenseMapper.mapTo(savedExpense);
 
-        String message="Need to approve this expense ID: "+savedExpense.getId()+", amount: "+savedExpense.getAmount();
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXPENSE_QUEUE, message);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXPENSE_QUEUE, outputDto);
 
-        return CompletableFuture.completedFuture(expenseMapper.mapTo(savedExpense));
+        return CompletableFuture.completedFuture(outputDto);
     }
 
     @Override
