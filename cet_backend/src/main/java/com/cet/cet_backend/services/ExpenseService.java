@@ -10,13 +10,15 @@ import java.util.concurrent.CompletableFuture;
 
 public interface ExpenseService {
 
-    CompletableFuture<ExpenseDto> createExpense(ExpenseDto expenseDto,  String currentUsername);
+    CompletableFuture<ExpenseDto> createExpense(ExpenseDto expenseDto, String currentUsername);
 
     Page<ExpenseDto> findAllExpenses(Pageable pageable);
 
     List<ExpenseDto> findExpensesByEmployeeId(Long employeeId);
 
-    ExpenseDto updateExpenseStatus(Long expenseId, Status newStatus);
+    ExpenseDto updateExpenseStatus(Long expenseId, Status newStatus, String comment);
+
+    ExpenseDto adminOverride(Long expenseId, Status newStatus, String comment);
 
     void deleteExpense(Long expenseId);
 

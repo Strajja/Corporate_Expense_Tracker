@@ -11,7 +11,24 @@ public class RabbitMQConfig {
     public static final String EXPENSE_QUEUE="expense_notifications";
     public static final String DLQ="expense_notifications_dlq";
     public static final String DLX="expense_dlx";
+    public static final String EMAIL_QUEUE = "email_invitation_queue";
+    public static final String EMAIL_EXCHANGE = "email_exchange";
+    public static final String EMAIL_ROUTING_KEY = "email.invitation.send";
 
+    @Bean
+    public Queue emailQueue() {
+        return new Queue(EMAIL_QUEUE, true);
+    }
+
+    @Bean
+    public TopicExchange emailExchange() {
+        return new TopicExchange(EMAIL_EXCHANGE);
+    }
+
+    @Bean
+    public Binding emailBinding(Queue emailQueue, TopicExchange emailExchange) {
+        return BindingBuilder.bind(emailQueue).to(emailExchange).with(EMAIL_ROUTING_KEY);
+    }
 
     @Bean
     public DirectExchange deadLetterExchange(){

@@ -1,10 +1,8 @@
 package com.cet.cet_backend.services;
 
 import com.cet.cet_backend.domain.dto.UserDto;
-import com.cet.cet_backend.domain.entities.UserEntity;
 
 import java.util.List;
-
 
 public interface UserService {
 
@@ -12,4 +10,7 @@ public interface UserService {
 
     List<UserDto> findAllUsers();
 
+    void changePassword(String username, String oldPassword, String newPassword);
+
+    UserDto updateUserByAdmin(Long userId, UserDto userDto);
 }

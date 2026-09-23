@@ -1,7 +1,9 @@
+// AuthPage.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/services/api'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,7 +25,6 @@ export default function AuthPage() {
   ];
 
   useEffect(() => {
-    // Closes the custom dropdown component when a click outside its area is detected.
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
@@ -34,13 +35,11 @@ export default function AuthPage() {
   }, []);
 
   const validatePassword = (pass: string) => {
-    // Validates that the password meets security requirements (min 8 chars, 1 uppercase, 1 number, 1 special).
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return regex.test(pass);
   };
 
   const handleVerifyCode = (e: React.FormEvent) => {
-    // Verifies the invitation code submitted during the first step of registration.
     e.preventDefault();
     setError('');
     
@@ -51,8 +50,7 @@ export default function AuthPage() {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    // Validates inputs and sets authentication data in local storage to simulate a login session.
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -60,13 +58,31 @@ export default function AuthPage() {
       setError('Please fill in all fields.');
       return;
     }
-    localStorage.setItem('user_role', role);
-    localStorage.setItem('username', username);
-    router.push('/');
+
+    try {
+      const response = await api.post('/users/login', {
+        username,
+        password
+      });
+
+      const token = response.data.token || response.data.jwt || response.data.accessToken;
+
+      if (token) {
+        localStorage.setItem('jwt_token', token);
+        localStorage.setItem('user_role', role);
+        localStorage.setItem('username', username);
+        router.push('/');
+      }
+    } catch (err: any) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setError('Invalid username or password.');
+      } else {
+        setError('An error occurred during login. Please try again.');
+      }
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
-    // Validates registration form details and creates a simulated session in local storage.
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -83,52 +99,52 @@ export default function AuthPage() {
       return;
     }
     
-    localStorage.setItem('user_role', 'employee');
-    localStorage.setItem('username', username);
-    router.push('/');
+    try {
+      const response = await api.post('/users/register', {
+        username,
+        password,
+        role
+      });
+
+      const token = response.data.token || response.data.jwt || response.data.accessToken;
+
+      if (token) {
+        localStorage.setItem('jwt_token', token);
+      }
+      
+      localStorage.setItem('user_role', role);
+      localStorage.setItem('username', username);
+      router.push('/');
+      
+    } catch (err: any) {
+      setError('Registration failed. Username might be taken.');
+    }
   };
 
   const selectedLabel = options.find(opt => opt.value === role)?.label;
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-gray-50 p-4"
-    >
-      <div
-        className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 w-full max-w-md"
-      >
-        <div
-          className="text-center mb-8"
-        >
-          <h2
-            className="text-2xl font-bold text-gray-900"
-          >
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 w-full max-w-md">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">
             Corporate Expense Tracker
           </h2>
-          <p
-            className="text-sm text-gray-500 mt-2"
-          >
+          <p className="text-sm text-gray-500 mt-2">
             {isLogin ? 'Enter your credentials to login' : 'New Employee Registration'}
           </p>
         </div>
 
         {error && (
-          <div
-            className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg"
-          >
+          <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
             {error}
           </div>
         )}
 
         {isLogin ? (
-          <form
-            onSubmit={handleLogin}
-            className="space-y-5"
-          >
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Username
               </label>
               <input
@@ -140,9 +156,7 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Password
               </label>
               <input
@@ -154,42 +168,28 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Select Role
               </label>
-              <div
-                className="relative"
-                ref={dropdownRef}
-              >
+              <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="w-full flex items-center justify-between px-5 py-2.5 bg-white border-2 border-[#8e082d] rounded-full focus:outline-none text-[#111827] font-semibold text-sm transition-shadow"
                 >
-                  <span>
-                    {selectedLabel}
-                  </span>
+                  <span>{selectedLabel}</span>
                   <svg
                     className={`h-4 w-4 text-[#111827] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
                 {isDropdownOpen && (
-                  <div
-                    className="absolute z-10 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-lg py-2"
-                  >
+                  <div className="absolute z-10 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-lg py-2">
                     {options.map((option) => (
                       <button
                         key={option.value}
@@ -216,14 +216,9 @@ export default function AuthPage() {
             </button>
           </form>
         ) : registerStep === 1 ? (
-          <form
-            onSubmit={handleVerifyCode}
-            className="space-y-5"
-          >
+          <form onSubmit={handleVerifyCode} className="space-y-5">
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Registration Code
               </label>
               <input
@@ -242,14 +237,9 @@ export default function AuthPage() {
             </button>
           </form>
         ) : (
-          <form
-            onSubmit={handleRegister}
-            className="space-y-5"
-          >
+          <form onSubmit={handleRegister} className="space-y-5">
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Username
               </label>
               <input
@@ -260,9 +250,7 @@ export default function AuthPage() {
               />
             </div>
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Password
               </label>
               <input
@@ -273,9 +261,7 @@ export default function AuthPage() {
               />
             </div>
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Confirm Password
               </label>
               <input
@@ -294,9 +280,7 @@ export default function AuthPage() {
           </form>
         )}
 
-        <div
-          className="mt-6 text-center"
-        >
+        <div className="mt-6 text-center">
           <button
             onClick={() => {
               setIsLogin(!isLogin);

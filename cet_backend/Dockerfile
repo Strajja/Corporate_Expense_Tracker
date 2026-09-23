@@ -1,7 +1,7 @@
 
 FROM eclipse-temurin:26-jdk-alpine
 
-WORKDIR /app
+WORKDIR /appdocker stop $(docker ps -a -q)
 
 COPY target/*.jar app.jar
 

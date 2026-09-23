@@ -20,4 +20,23 @@ class EmailService  (private val mailSender: JavaMailSender) {
         println("📧 Email successfully sent to manager for Expense ID: $expenseId")
     }
 
+    fun sendCodeForRegistration(emailAddress: String, firstName: String, code: String) {
+        val message = SimpleMailMessage()
+        message.from = "system@cet.com"
+        message.setTo(emailAddress)
+        message.subject = "Pozivnica za registraciju - CET Platforma"
+        message.text = """
+            Zdravo $firstName,
+            
+            Pozvani ste da se registrujete na CET platformu.
+            Vaš kod za registraciju je: $code
+            
+            Srdačan pozdrav,
+            CET Tim
+        """.trimIndent()
+
+        mailSender.send(message)
+        println("Email sa kodom za registraciju uspešno poslat na: $emailAddress")
+    }
+
 }

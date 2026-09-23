@@ -3,6 +3,7 @@ package com.cet.cet_backend.services;
 import com.cet.cet_backend.config.RabbitMQConfig;
 import com.cet.cet_backend.domain.dto.ExpenseDto;
 import com.cet.cet_backend.domain.entities.ExpenseEntity;
+import com.cet.cet_backend.domain.entities.Role;
 import com.cet.cet_backend.domain.entities.Status;
 import com.cet.cet_backend.domain.entities.UserEntity;
 import com.cet.cet_backend.mappers.Mapper;
@@ -37,6 +38,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         this.expenseMapper = expenseMapper;
         this.rabbitTemplate = rabbitTemplate;
     }
+
     @Async("asyncExecutor")
     @Override
     public CompletableFuture<ExpenseDto> createExpense(ExpenseDto expenseDto, String currentUsername) {
@@ -47,6 +49,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         ExpenseEntity expenseEntity = expenseMapper.mapFrom(expenseDto);
 
         expenseEntity.setEmployee(employee);
+        expenseEntity.setStatus(Status.PENDING);
 
         ExpenseEntity savedExpense = expenseRepository.save(expenseEntity);
         ExpenseDto outputDto = expenseMapper.mapTo(savedExpense);
@@ -83,7 +86,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public ExpenseDto updateExpenseStatus(Long expenseId, Status newStatus) {
+    public ExpenseDto updateExpenseStatus(Long expenseId, Status newStatus, String comment) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
@@ -91,7 +94,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         UserEntity currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (currentUser.getRole().equals("EMPLOYEE")) {
+        if (currentUser.getRole() == Role.EMPLOYEE) {
             throw new RuntimeException("Access denied: Employees cannot approve or reject expenses");
         }
 
@@ -99,6 +102,31 @@ public class ExpenseServiceImpl implements ExpenseService {
                 .orElseThrow(() -> new RuntimeException("Expense not found"));
 
         expenseEntity.setStatus(newStatus);
+        expenseEntity.setComment(comment);
+        expenseEntity.setReviewedBy(currentUser);
+        expenseRepository.save(expenseEntity);
+
+        return expenseMapper.mapTo(expenseEntity);
+    }
+
+    @Override
+    public ExpenseDto adminOverride(Long expenseId, Status newStatus, String comment) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        UserEntity currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new RuntimeException("Access denied: Only admins can override expenses");
+        }
+
+        ExpenseEntity expenseEntity = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+
+        expenseEntity.setStatus(newStatus);
+        expenseEntity.setComment(comment + " (Admin Override)");
+        expenseEntity.setReviewedBy(currentUser);
         expenseRepository.save(expenseEntity);
 
         return expenseMapper.mapTo(expenseEntity);
@@ -106,7 +134,6 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public void deleteExpense(Long expenseId) {
-
 
         Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
@@ -117,7 +144,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         ExpenseEntity expense= expenseRepository.findById(expenseId)
                 .orElseThrow(()->new RuntimeException("Expense not found"));
 
-        if(!expense.getEmployee().getId().equals(user.getId())){
+        if(!expense.getEmployee().getId().equals(user.getId()) && user.getRole() != Role.ADMIN){
             throw new RuntimeException("Access denied: You do not own this expense");
         }
 
@@ -134,7 +161,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         UserEntity currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (currentUser.getRole().equals("EMPLOYEE")) {
+        if (currentUser.getRole() == Role.EMPLOYEE) {
             throw new RuntimeException("Access denied: Only managers can view team expenses");
         }
 

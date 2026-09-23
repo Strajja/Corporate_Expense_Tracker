@@ -47,12 +47,29 @@ export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps)
     }
   }, [expenseToEdit, reset]);
 
-  const onSubmit = (data: ExpenseFormData) => {
-    // Passes valid form data to parent and resets form if creating a new expense.
-    onSave(data);
-    if (!expenseToEdit) {
-      reset({ description: "", amount: 0, category: "Representation" });
-    }
+  const onSubmit =async (data: ExpenseFormData) => {
+    
+    try {
+      const response = await fetch("http://localhost:8080/api/expenses", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+              amount: data.amount, 
+              category: data.category,
+              description: data.description
+          }),
+      });
+
+      if (response.ok) {
+          console.log("Uspešno poslato u Javu!");
+      } else {
+          console.error("Greška pri slanju.");
+      }
+  } catch (error) {
+      console.error("Mrežna greška:", error);
+  }
   };
 
   return (
