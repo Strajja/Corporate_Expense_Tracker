@@ -17,7 +17,8 @@ The Corporate Expense Tracker is a full-stack enterprise web application develop
 
 ## 4. Interface Documentation
 
-coming soon...
+coming soon...<img width="1155" height="1155" alt="cet" src="https://github.com/user-attachments/assets/99853784-5eb0-4890-99ea-3b4df3eb2c30" />
+
 
 ## 5. Local Deployment Instructions
 
