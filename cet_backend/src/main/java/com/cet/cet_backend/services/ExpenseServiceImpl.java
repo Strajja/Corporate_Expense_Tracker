@@ -32,7 +32,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     private final RabbitTemplate rabbitTemplate;
 
-    public ExpenseServiceImpl(ExpenseRepository expenseRepository, UserRepository userRepository, Mapper<ExpenseEntity, ExpenseDto> expenseMapper,  RabbitTemplate rabbitTemplate) {
+    public ExpenseServiceImpl(ExpenseRepository expenseRepository, UserRepository userRepository, Mapper<ExpenseEntity, ExpenseDto> expenseMapper, RabbitTemplate rabbitTemplate) {
         this.expenseRepository = expenseRepository;
         this.userRepository = userRepository;
         this.expenseMapper = expenseMapper;
@@ -53,6 +53,14 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         ExpenseEntity savedExpense = expenseRepository.save(expenseEntity);
         ExpenseDto outputDto = expenseMapper.mapTo(savedExpense);
+
+        outputDto.setEmployeeFirstName(employee.getFirstName());
+        outputDto.setEmployeeId(employee.getId());
+
+        if (employee.getManagerId() != null) {
+            userRepository.findById(employee.getManagerId())
+                    .ifPresent(manager -> outputDto.setManagerEmail(manager.getEmailAddress()));
+        }
 
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXPENSE_QUEUE, outputDto);
 

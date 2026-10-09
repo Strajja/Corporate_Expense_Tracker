@@ -1,16 +1,17 @@
 package com.cet.cet_backend.config;
 
 import org.springframework.amqp.core.*;
-import org.springframework.amqp.support.converter.*;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String EXPENSE_QUEUE="expense_notifications";
-    public static final String DLQ="expense_notifications_dlq";
-    public static final String DLX="expense_dlx";
+    public static final String EXPENSE_QUEUE = "expense_notifications";
+    public static final String DLQ = "expense_notifications_dlq";
+    public static final String DLX = "expense_dlx";
     public static final String EMAIL_QUEUE = "email_invitation_queue";
     public static final String EMAIL_EXCHANGE = "email_exchange";
     public static final String EMAIL_ROUTING_KEY = "email.invitation.send";
@@ -31,18 +32,18 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public DirectExchange deadLetterExchange(){
+    public DirectExchange deadLetterExchange() {
         return new DirectExchange(DLX);
     }
 
     @Bean
-    public Queue dlq(){
-        return new Queue(DLQ,true);
+    public Queue dlq() {
+        return new Queue(DLQ, true);
     }
 
     @Bean
-    public Binding dlqBinding(){
-        return BindingBuilder.bind(dlq()).to(deadLetterExchange()).with(DLX);
+    public Binding dlqBinding(Queue dlq, DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(dlq).to(deadLetterExchange).with(DLX);
     }
 
     @Bean
@@ -54,8 +55,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public MessageConverter jsonMessageConverter(){
-        return new JacksonJsonMessageConverter();
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
     }
 }
-

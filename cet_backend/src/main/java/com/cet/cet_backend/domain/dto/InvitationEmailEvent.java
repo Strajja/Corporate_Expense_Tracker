@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class InvitationEmailEvent {
 
-    private String emailAdress;
+    private String emailAddress;
 
     private String firstName;
 

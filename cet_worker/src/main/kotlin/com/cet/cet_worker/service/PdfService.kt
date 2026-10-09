@@ -28,14 +28,15 @@ class PdfService {
         document.add(Paragraph("Corporate Expense Receipt"))
         document.add(Paragraph("---------------------------------"))
         document.add(Paragraph("Expense ID: ${expenseDto.id}"))
-        document.add(Paragraph("Amount: ${expenseDto.amount} RSD"))
+        document.add(Paragraph("Employee: ${expenseDto.employeeFirstName ?: "N/A"} (ID: ${expenseDto.employeeId})"))
         document.add(Paragraph("Category: ${expenseDto.category}"))
-        document.add(Paragraph("Employee ID: ${expenseDto.employeeId}"))
+        document.add(Paragraph("Description: ${expenseDto.description}"))
+        document.add(Paragraph("Amount: ${expenseDto.amount} RSD"))
+        document.add(Paragraph("Status: ${expenseDto.status}"))
 
         document.close()
 
         println("PDF Receipt successfully generated at: $filePath")
         return filePath
     }
-
 }

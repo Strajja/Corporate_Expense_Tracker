@@ -1,38 +1,19 @@
-// AuthPage.tsx
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/services/api'
+import api from '@/services/api';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [registerStep, setRegisterStep] = useState(1);
-  const [role, setRole] = useState<'employee' | 'manager'>('employee');
   const [inviteCode, setInviteCode] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [error, setError] = useState('');
   
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  const options = [
-    { value: 'employee', label: 'Employee' },
-    { value: 'manager', label: 'Manager' }
-  ];
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const validatePassword = (pass: string) => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -65,19 +46,20 @@ export default function AuthPage() {
         password
       });
 
-      const token = response.data.token || response.data.jwt || response.data.accessToken;
+      const token = response.data.token || response.data.jwt || response.data.accessToken || response.data;
 
-      if (token) {
+      if (token && typeof token === 'string') {
         localStorage.setItem('jwt_token', token);
-        localStorage.setItem('user_role', role);
         localStorage.setItem('username', username);
         router.push('/');
+      } else {
+        setError('Nevažeći format tokena sa servera.');
       }
     } catch (err: any) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         setError('Invalid username or password.');
       } else {
-        setError('An error occurred during login. Please try again.');
+        setError(err.response?.data?.message || err.response?.data || 'An error occurred during login. Please try again.');
       }
     }
   };
@@ -102,26 +84,22 @@ export default function AuthPage() {
     try {
       const response = await api.post('/users/register', {
         username,
-        password,
-        role
+        password
       });
 
       const token = response.data.token || response.data.jwt || response.data.accessToken;
 
-      if (token) {
+      if (token && typeof token === 'string') {
         localStorage.setItem('jwt_token', token);
       }
       
-      localStorage.setItem('user_role', role);
       localStorage.setItem('username', username);
       router.push('/');
       
     } catch (err: any) {
-      setError('Registration failed. Username might be taken.');
+      setError(err.response?.data?.message || err.response?.data || 'Registration failed. Username might be taken.');
     }
   };
-
-  const selectedLabel = options.find(opt => opt.value === role)?.label;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -165,47 +143,6 @@ export default function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Select Role
-              </label>
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full flex items-center justify-between px-5 py-2.5 bg-white border-2 border-[#8e082d] rounded-full focus:outline-none text-[#111827] font-semibold text-sm transition-shadow"
-                >
-                  <span>{selectedLabel}</span>
-                  <svg
-                    className={`h-4 w-4 text-[#111827] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {isDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-lg py-2">
-                    {options.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => {
-                          setRole(option.value as 'employee' | 'manager');
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-5 py-3 text-sm font-bold transition-colors ${role === option.value ? 'text-[#8e082d] bg-gray-50' : 'text-[#374151] hover:bg-gray-50'}`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
 
             <button

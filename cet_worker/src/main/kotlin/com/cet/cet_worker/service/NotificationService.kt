@@ -17,12 +17,11 @@ class NotificationService(
     @RabbitListener(queues = ["expense_notifications"])
     fun receiveExpenseNotification(expense: ExpenseDto) {
         println("\n=========================================================")
-        println("NEW MESSAGE RECEIVED FROM RABBITMQ!")
+        println("NEW EXPENSE MESSAGE RECEIVED FROM RABBITMQ!")
 
         try {
-            pdfService.generateReceipt(expense)
-
-            emailService.sendApprovalRequest(expense.id, expense.amount, expense.employeeId)
+            val pdfPath = pdfService.generateReceipt(expense)
+            emailService.sendApprovalRequest(expense, pdfPath)
 
             val log = NotificationLog(
                 expenseId = expense.id ?: 0L,
@@ -30,7 +29,7 @@ class NotificationService(
             )
             logRepository.save(log)
 
-            println("Notification workflow completed and logged to H2 DB.")
+            println("Notification workflow completed and logged.")
         } catch (e: Exception) {
             println("Error processing notification for Expense ID: ${expense.id}")
             val log = NotificationLog(
@@ -61,9 +60,10 @@ class NotificationService(
             )
             logRepository.save(log)
 
-            println("Invitation email workflow completed and logged to H2 DB.")
+            println("Invitation email successfully sent via Mailtrap and logged.")
         } catch (e: Exception) {
             println("Error processing invitation email for: ${event.emailAddress}")
+            e.printStackTrace()
             val log = NotificationLog(
                 expenseId = 0L,
                 status = "FAILED_INVITATION"

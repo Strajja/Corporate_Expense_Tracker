@@ -40,4 +40,6 @@ public class ExpenseDto {
 
     private String employeeFirstName;
 
+    private String managerEmail;
+
 }
