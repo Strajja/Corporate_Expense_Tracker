@@ -6,6 +6,9 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuration for RabbitMQ queues, exchanges, and bindings.
+ */
 @Configuration
 public class RabbitMQConfig {
 
@@ -46,6 +49,9 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(dlq).to(deadLetterExchange).with(DLX);
     }
 
+    /**
+     * Expense queue configured with Dead Letter routing.
+     */
     @Bean
     public Queue expenseQueue() {
         return QueueBuilder.durable(EXPENSE_QUEUE)
@@ -54,6 +60,9 @@ public class RabbitMQConfig {
                 .build();
     }
 
+    /**
+     * Enables JSON serialization for RabbitMQ messages.
+     */
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();

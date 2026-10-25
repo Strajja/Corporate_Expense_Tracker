@@ -2,6 +2,9 @@ package com.cet.cet_worker.dto
 
 import java.math.BigDecimal
 
+/**
+ * Data transfer object representing expense details received from the main application.
+ */
 data class ExpenseDto(
     val id: Long? = null,
     val amount: BigDecimal? = null,

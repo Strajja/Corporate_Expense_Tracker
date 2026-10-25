@@ -8,11 +8,18 @@ import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.stereotype.Service
 import java.io.File
 
+/**
+ * Service responsible for composing and sending emails,
+ * including approval requests with attached PDF reports and user registration codes.
+ */
 @Service
 class EmailService(
     private val mailSender: JavaMailSender
 ) {
 
+    /**
+     * Sends an email to the manager requesting expense approval, attaching the generated PDF receipt.
+     */
     fun sendApprovalRequest(expense: ExpenseDto, pdfPath: String) {
         val managerEmail = expense.managerEmail
         if (managerEmail.isNullOrEmpty()) {
@@ -24,31 +31,34 @@ class EmailService(
         val helper = MimeMessageHelper(message, true)
 
         helper.setTo(managerEmail)
-        helper.setSubject("Novi trošak na čekanju: ${expense.description}")
+        helper.setSubject("New Expense Pending Approval: ${expense.description}")
         helper.setText(
-            "Poštovani,\n\nRadnik ${expense.employeeFirstName ?: ""} (ID: ${expense.employeeId}) je podneo novi trošak za odobrenje.\n\n" +
-                    "Iznos: ${expense.amount} RSD\n" +
-                    "Kategorija: ${expense.category}\n" +
-                    "Opis: ${expense.description}\n\n" +
-                    "U prilogu se nalazi generisani PDF izveštaj.\n\nSrdačan pozdrav,\nCET Sistem"
+            "Dear Manager,\n\nEmployee ${expense.employeeFirstName ?: ""} (ID: ${expense.employeeId}) has submitted a new expense for approval.\n\n" +
+                    "Amount: ${expense.amount} RSD\n" +
+                    "Category: ${expense.category}\n" +
+                    "Description: ${expense.description}\n\n" +
+                    "Please find the generated PDF report attached.\n\nBest regards,\nCET System"
         )
 
         val pdfFile = File(pdfPath)
         if (pdfFile.exists()) {
-            helper.addAttachment("Trosak_${expense.id}.pdf", FileSystemResource(pdfFile))
+            helper.addAttachment("Expense_${expense.id}.pdf", FileSystemResource(pdfFile))
         }
 
         mailSender.send(message)
-        println("Email sa PDF-om uspešno poslat menadžeru na: $managerEmail")
+        println("Email with PDF successfully sent to manager at: $managerEmail")
     }
 
+    /**
+     * Sends a registration invitation email containing an activation code to a new user.
+     */
     fun sendCodeForRegistration(emailAddress: String?, firstName: String?, code: String?) {
         val message: MimeMessage = mailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, false)
 
         helper.setTo(emailAddress ?: return)
-        helper.setSubject("Pozivnica za registraciju")
-        helper.setText("Zdravo ${firstName ?: ""},\n\nTvoj kod za registraciju je: $code")
+        helper.setSubject("Registration Invitation")
+        helper.setText("Hello ${firstName ?: ""},\n\nYour registration code is: $code")
 
         mailSender.send(message)
     }

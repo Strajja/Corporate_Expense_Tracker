@@ -17,6 +17,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Implementation of InvitationService, managing the generation of invitations and dispatching email events via RabbitMQ.
+ */
 @Service
 @Log
 public class InvitationServiceImpl implements InvitationService {
@@ -31,8 +34,8 @@ public class InvitationServiceImpl implements InvitationService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
+    @Override
     public UserInvitationEntity createInvitation(CreateInvitationRequest request) {
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
 
@@ -40,7 +43,7 @@ public class InvitationServiceImpl implements InvitationService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (currentUser.getRole() == Role.MANAGER && request.getRole() != Role.EMPLOYEE) {
-            throw new RuntimeException("Manager can just send invitation for employees");
+            throw new RuntimeException("Managers can only send invitations for employees");
         }
 
         String uniqueCode = UUID.randomUUID().toString();
@@ -54,6 +57,7 @@ public class InvitationServiceImpl implements InvitationService {
                 .dateOfBirth(request.getDateOfBirth())
                 .hireDate(request.getHireDate())
                 .role(request.getRole())
+                .managerId(currentUser.getRole() == Role.MANAGER ? currentUser.getId() : null)
                 .expirationDate(expiration)
                 .build();
 
@@ -63,18 +67,16 @@ public class InvitationServiceImpl implements InvitationService {
                 .invitationCode(uniqueCode)
                 .build();
 
-        log.info("Pripremam poruku za RabbitMQ...");
-
+        log.info("Preparing message for RabbitMQ...");
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.EMAIL_EXCHANGE,
                 RabbitMQConfig.EMAIL_ROUTING_KEY,
                 event
         );
-
-        log.info("Poruka je uspešno poslata u RabbitMQ!");
+        log.info("Message successfully sent to RabbitMQ!");
 
         invitationRepository.save(invitation);
-        System.out.println("Generisan kod za radnika: " + uniqueCode);
+        System.out.println("Generated code for employee: " + uniqueCode);
 
         return invitation;
     }

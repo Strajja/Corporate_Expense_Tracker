@@ -9,9 +9,17 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+/**
+ * Configuration class for RabbitMQ messaging setup.
+ * Defines message converters and queue bindings for asynchronous processing.
+ */
 @Configuration
 class RabbitMQConfig {
 
+    /**
+     * Configures the JSON message converter using Jackson with a custom class mapper
+     * to map incoming serialized messages to appropriate Kotlin data classes.
+     */
     @Bean
     open fun jsonMessageConverter(): Jackson2JsonMessageConverter {
         val converter = Jackson2JsonMessageConverter()
@@ -28,6 +36,10 @@ class RabbitMQConfig {
         return converter
     }
 
+    /**
+     * Defines a durable queue for expense notifications with Dead Letter Exchange (DLX) support
+     * for handling failed message processing.
+     */
     @Bean
     fun expenseNotificationsQueue(): Queue {
         return QueueBuilder.durable("expense_notifications")
@@ -36,6 +48,9 @@ class RabbitMQConfig {
             .build()
     }
 
+    /**
+     * Defines a durable queue for user registration invitation emails.
+     */
     @Bean
     fun emailInvitationsQueue(): Queue {
         return Queue("email_invitation_queue", true)

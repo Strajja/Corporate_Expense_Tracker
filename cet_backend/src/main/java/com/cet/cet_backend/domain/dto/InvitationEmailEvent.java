@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Event payload dispatched to RabbitMQ for sending invitation emails via worker.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,5 +19,4 @@ public class InvitationEmailEvent {
     private String firstName;
 
     private String invitationCode;
-
 }

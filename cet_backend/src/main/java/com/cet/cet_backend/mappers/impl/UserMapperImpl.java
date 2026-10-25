@@ -6,6 +6,10 @@ import com.cet.cet_backend.mappers.Mapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
+/**
+ * Implementation of the Mapper interface for UserEntity and UserDto.
+ * Utilizes ModelMapper to handle object conversions.
+ */
 @Component
 public class UserMapperImpl implements Mapper<UserEntity, UserDto> {
 

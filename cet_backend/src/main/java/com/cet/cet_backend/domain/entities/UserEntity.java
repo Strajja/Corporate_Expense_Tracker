@@ -5,14 +5,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Entity representing a system user and implementing Spring Security's UserDetails.
+ */
 @Entity
 @Table(name = "users")
 @Data
@@ -42,7 +47,21 @@ public class UserEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    /**
+     * The ID of the manager overseeing this user (if applicable).
+     */
     private Long managerId;
+
+    @Column(name = "last_username_change_date")
+    private LocalDateTime lastUsernameChangeDate;
+
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<ExpenseEntity> myExpenses;
+
+    @OneToMany(mappedBy = "reviewedBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<ExpenseEntity> reviewedExpenses;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -8,8 +8,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
+/**
+ * Entity tracking invitation codes sent to prospective users.
+ */
 @Entity
 @Table(name="user_invitations")
 @Data
@@ -46,4 +48,7 @@ public class UserInvitationEntity {
 
     @Column(nullable = false)
     private LocalDateTime expirationDate;
+
+    @Column(nullable = true)
+    private Long managerId;
 }

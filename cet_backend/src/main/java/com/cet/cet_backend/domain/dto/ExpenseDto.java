@@ -1,5 +1,6 @@
 package com.cet.cet_backend.domain.dto;
 
+import com.cet.cet_backend.domain.entities.Category;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +10,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Data Transfer Object representing expense information exchanged between client and server.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,26 +24,24 @@ public class ExpenseDto {
     @NotBlank(message = "Description should not be blank.")
     private String description;
 
-    @NotBlank(message = "Category is required")
-    private String category;
+    @NotNull(message = "Category is required.")
+    private Category category;
 
-    @NotNull(message = "Amount is required")
+    @NotNull(message = "Amount is required.")
     @Positive(message = "Amount must be greater than zero.")
     private BigDecimal amount;
 
     @NotNull(message = "Date cannot be null.")
-    @PastOrPresent(message="Date should not be in future.")
+    @PastOrPresent(message = "Date should not be in the future.")
     private LocalDate date;
 
-    @NotBlank(message = "Status is required")
     private String status;
 
-    @NotNull(message = "Employee ID is required")
-    @Positive(message = "Employee ID must be a positive number")
+    private String comment;
+
     private Long employeeId;
 
     private String employeeFirstName;
 
     private String managerEmail;
-
 }

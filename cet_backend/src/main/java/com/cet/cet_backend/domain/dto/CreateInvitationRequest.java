@@ -12,29 +12,32 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * Data Transfer Object representing a request to create a new user invitation.
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateInvitationRequest {
 
-    @NotBlank
+    @NotBlank(message = "First name is required.")
     private String firstName;
 
-    @NotBlank
+    @NotBlank(message = "Last name is required.")
     private String lastName;
 
-    @NotBlank
-    @Email
+    @NotBlank(message = "Email address is required.")
+    @Email(message = "Email must be in a valid format.")
     private String emailAddress;
 
-    @NotNull
-    @Past
+    @NotNull(message = "Date of birth is required.")
+    @Past(message = "Date of birth must be in the past.")
     private LocalDate dateOfBirth;
 
-    @NotNull
+    @NotNull(message = "Hire date is required.")
     private LocalDate hireDate;
 
-    @NotNull
+    @NotNull(message = "Role is required.")
     private Role role;
 }

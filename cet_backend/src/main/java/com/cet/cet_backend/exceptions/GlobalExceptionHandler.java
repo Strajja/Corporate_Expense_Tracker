@@ -11,16 +11,30 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Global exception handler capturing application exceptions and formatting uniform JSON error responses.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Handles runtime exceptions and maps common exception messages to appropriate HTTP status codes.
+     */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
 
-        HttpStatus status = HttpStatus.NOT_FOUND;
+        // Log stack trace to console for backend debugging
+        ex.printStackTrace();
 
-        if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("access denied")) {
-            status = HttpStatus.FORBIDDEN;
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        if (ex.getMessage() != null) {
+            String msg = ex.getMessage().toLowerCase();
+            if (msg.contains("access denied")) {
+                status = HttpStatus.FORBIDDEN;
+            } else if (msg.contains("not found")) {
+                status = HttpStatus.NOT_FOUND;
+            }
         }
 
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -32,6 +46,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, status);
     }
 
+    /**
+     * Captures request validation errors and returns a map of field-specific validation messages.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
 

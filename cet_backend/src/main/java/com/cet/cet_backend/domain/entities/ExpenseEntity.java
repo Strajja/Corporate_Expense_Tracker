@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Entity representing an individual expense record in the database.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,10 +38,16 @@ public class ExpenseEntity {
 
     private String comment;
 
+    /**
+     * The employee who submitted the expense.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="employee_id", nullable = false)
     private UserEntity employee;
 
+    /**
+     * The manager or admin who reviewed the expense.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="reviewed_by_id")
     private UserEntity reviewedBy;

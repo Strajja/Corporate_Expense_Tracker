@@ -6,13 +6,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
+/**
+ * Interface defining the operations for managing expenses.
+ */
 public interface ExpenseService {
 
-    CompletableFuture<ExpenseDto> createExpense(ExpenseDto expenseDto, String currentUsername);
+    ExpenseDto createExpense(ExpenseDto expenseDto, String currentUsername);
 
-    Page<ExpenseDto> findAllExpenses(Pageable pageable);
+    Page<ExpenseDto> findAllExpenses(Pageable pageable, String currentUsername);
 
     List<ExpenseDto> findExpensesByEmployeeId(Long employeeId);
 
@@ -24,4 +26,7 @@ public interface ExpenseService {
 
     List<ExpenseDto> findPendingExpensesForTeam(List<Long> employeeIds, Status status);
 
+    ExpenseDto updateExpense(Long expenseId, ExpenseDto expenseDto, String currentUsername);
+
+    Page<ExpenseDto> findAllApprovals(Pageable pageable, String currentUsername);
 }

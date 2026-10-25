@@ -8,9 +8,13 @@ import com.cet.cet_backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of UserService, handling business logic for user management, account updates, and team assignments.
+ */
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -27,7 +31,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto registerUser(UserDto userDto) {
         UserEntity userEntity = userMapper.mapFrom(userDto);
-
         userEntity.setPassword(passwordEncoder.encode(userDto.getPassword()));
 
         if (userEntity.getRole() == null) {
@@ -40,9 +43,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> findAllUsers() {
-        return userRepository
-                .findAll()
-                .stream()
+        return userRepository.findAll().stream()
                 .map(userMapper::mapTo)
                 .collect(Collectors.toList());
     }
@@ -57,6 +58,32 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    @Override
+    public void changeUsername(String currentUsername, String newUsername) {
+        UserEntity user = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getUsername().equals(newUsername)) {
+            throw new RuntimeException("This is already your username");
+        }
+
+        if (userRepository.findByUsername(newUsername).isPresent()) {
+            throw new RuntimeException("Username is already taken");
+        }
+
+        if (user.getLastUsernameChangeDate() != null) {
+            LocalDateTime nextAllowedDate = user.getLastUsernameChangeDate().plusDays(30);
+            if (LocalDateTime.now().isBefore(nextAllowedDate)) {
+                long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), nextAllowedDate);
+                throw new RuntimeException("You can change your username again in " + daysLeft + " days");
+            }
+        }
+
+        user.setUsername(newUsername);
+        user.setLastUsernameChangeDate(LocalDateTime.now());
         userRepository.save(user);
     }
 
@@ -80,5 +107,52 @@ public class UserServiceImpl implements UserService {
 
         UserEntity savedUser = userRepository.save(existingUser);
         return userMapper.mapTo(savedUser);
+    }
+
+    @Override
+    public List<UserDto> findTeamMembers(String username) {
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Long targetManagerId = (user.getRole() == Role.EMPLOYEE) ? user.getManagerId() : user.getId();
+
+        if (targetManagerId == null) {
+            return List.of();
+        }
+
+        return userRepository.findAllByManagerId(targetManagerId).stream()
+                .map(userMapper::mapTo)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserDto> findUnassignedEmployees() {
+        return userRepository.findByRoleAndManagerIdIsNull(Role.EMPLOYEE).stream()
+                .map(userMapper::mapTo)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void assignManagerToEmployee(Long employeeId, String managerUsername) {
+        UserEntity manager = userRepository.findByUsername(managerUsername)
+                .orElseThrow(() -> new RuntimeException("Manager not found"));
+        UserEntity employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        employee.setManagerId(manager.getId());
+        userRepository.save(employee);
+    }
+
+    @Override
+    public void unassignEmployee(Long employeeId) {
+        UserEntity employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        employee.setManagerId(null);
+        userRepository.save(employee);
+    }
+
+    @Override
+    public void deleteUser(Long userId) {
+        userRepository.deleteById(userId);
     }
 }

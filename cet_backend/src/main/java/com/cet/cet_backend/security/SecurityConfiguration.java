@@ -17,6 +17,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Main Spring Security configuration managing endpoint access, CORS, and filter chains.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -30,6 +33,9 @@ public class SecurityConfiguration {
         this.authenticationProvider = authenticationProvider;
     }
 
+    /**
+     * Configures the HTTP security filter chain.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -50,6 +56,9 @@ public class SecurityConfiguration {
         return http.build();
     }
 
+    /**
+     * Configures Cross-Origin Resource Sharing (CORS) for the frontend application.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -63,5 +72,4 @@ public class SecurityConfiguration {
 
         return source;
     }
-
 }

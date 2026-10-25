@@ -7,6 +7,10 @@ import com.cet.cet_worker.repository.NotificationLogRepository
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Service
 
+/**
+ * Service that listens to RabbitMQ queues to process incoming expense notifications
+ * and registration invitation events, triggering document generation and email dispatch.
+ */
 @Service
 class NotificationService(
     private val emailService: EmailService,
@@ -14,6 +18,10 @@ class NotificationService(
     private val logRepository: NotificationLogRepository
 ) {
 
+    /**
+     * Listens to the expense notifications queue, generates a PDF receipt,
+     * sends an approval request email, and logs the execution outcome.
+     */
     @RabbitListener(queues = ["expense_notifications"])
     fun receiveExpenseNotification(expense: ExpenseDto) {
         println("\n=========================================================")
@@ -42,6 +50,10 @@ class NotificationService(
         println("=========================================================\n")
     }
 
+    /**
+     * Listens to the email invitation queue, sends registration codes to new users,
+     * and logs the outcome.
+     */
     @RabbitListener(queues = ["email_invitation_queue"])
     fun receiveInvitationNotification(event: InvitationEmailEvent) {
         println("\n=========================================================")
@@ -60,7 +72,7 @@ class NotificationService(
             )
             logRepository.save(log)
 
-            println("Invitation email successfully sent via Mailtrap and logged.")
+            println("Invitation email successfully sent and logged.")
         } catch (e: Exception) {
             println("Error processing invitation email for: ${event.emailAddress}")
             e.printStackTrace()

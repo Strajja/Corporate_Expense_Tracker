@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object returning the generated JWT token upon successful authentication.
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -12,5 +15,4 @@ import lombok.NoArgsConstructor;
 public class TokenResponse {
 
     private String token;
-
 }

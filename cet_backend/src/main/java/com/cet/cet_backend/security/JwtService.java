@@ -15,6 +15,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Service responsible for JWT token generation, parsing, and validation.
+ */
 @Service
 public class JwtService {
 
@@ -24,11 +27,17 @@ public class JwtService {
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
+    /**
+     * Decodes the secret key and generates an HMAC signing key.
+     */
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * Generates a token embedding custom user roles and ID.
+     */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
 
@@ -37,10 +46,13 @@ public class JwtService {
             extraClaims.put("id", user.getId());
         }
 
-        return generateToken(extraClaims, userDetails);
+        return buildToken(extraClaims, userDetails);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    /**
+     * Core logic for building the JWT token.
+     */
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .claims(extraClaims)
                 .subject(userDetails.getUsername())

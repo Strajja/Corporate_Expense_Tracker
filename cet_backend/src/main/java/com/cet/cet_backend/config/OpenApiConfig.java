@@ -8,14 +8,21 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Swagger / OpenAPI documentation configuration.
+ */
 @Configuration
 @OpenAPIDefinition(
-        info = @Info(title = "Corporate Expense Tracker API", description = "Kompletna dokumentacija API-ja", version = "1.0"),
+        info = @Info(
+                title = "Corporate Expense Tracker API",
+                description = "Complete API documentation",
+                version = "1.0"
+        ),
         security = @SecurityRequirement(name = "bearerAuth")
 )
 @SecurityScheme(
         name = "bearerAuth",
-        description = "Unesite vaš JWT token ovde",
+        description = "Enter your JWT token here",
         scheme = "bearer",
         type = SecuritySchemeType.HTTP,
         bearerFormat = "JWT",

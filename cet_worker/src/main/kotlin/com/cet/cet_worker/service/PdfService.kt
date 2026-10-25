@@ -10,9 +10,16 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 
+/**
+ * Service responsible for generating PDF receipts for corporate expenses using iText library.
+ */
 @Service
 class PdfService {
 
+    /**
+     * Generates a PDF receipt file containing details of the provided expense DTO
+     * inside the local 'receipts' directory and returns the file path.
+     */
     fun generateReceipt(expenseDto: ExpenseDto): String {
         val directory = Paths.get("receipts")
         if (!Files.exists(directory)) {

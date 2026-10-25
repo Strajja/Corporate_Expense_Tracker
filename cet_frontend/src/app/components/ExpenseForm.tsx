@@ -4,8 +4,8 @@ import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from "react-hook-form";
-import { Expense } from '../data/mockData'; 
 
+// Validation schema for the expense form
 const expenseSchema = z.object({
   description: z.string().min(3, "Description must be longer than 3 characters."),
   amount: z.coerce.number().min(0, "Amount cannot be negative."),
@@ -16,11 +16,15 @@ type ExpenseFormData = z.infer<typeof expenseSchema>;
 
 interface ExpenseFormProps {
   onSave: (data: ExpenseFormData) => void;
-  expenseToEdit: Expense | null;
+  expenseToEdit: any | null;
 }
 
+/**
+ * ExpenseForm Component
+ * Handles both the creation of new expenses and the editing of existing ones.
+ * Uses react-hook-form with Zod for validation.
+ */
 export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps) {
-  // Manages the state and validation of the add/edit expense form using React Hook Form and Zod.
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -30,13 +34,21 @@ export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps)
     }
   });
 
+  // Populate form fields when editing an existing expense or reset when creating a new one
   useEffect(() => {
-    // Populates the form with existing data when an item is selected for editing.
     if (expenseToEdit) {
+      let formattedCategory = expenseToEdit.category;
+      
+      // Normalize category names for the dropdown
+      if (formattedCategory === "TRANSPORTATION") formattedCategory = "Transport";
+      if (formattedCategory === "REPRESENTATION") formattedCategory = "Representation";
+      if (formattedCategory === "EQUIPMENT") formattedCategory = "Equipment";
+      if (formattedCategory === "EDUCATION") formattedCategory = "Education";
+
       reset({
-        description: expenseToEdit.description,
-        amount: expenseToEdit.amount,
-        category: expenseToEdit.category
+        description: expenseToEdit.description || "",
+        amount: expenseToEdit.amount || 0,
+        category: formattedCategory || "Representation"
       });
     } else {
       reset({
@@ -47,96 +59,67 @@ export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps)
     }
   }, [expenseToEdit, reset]);
 
-  const onSubmit =async (data: ExpenseFormData) => {
-    
-    try {
-      const response = await fetch("http://localhost:8080/api/expenses", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-              amount: data.amount, 
-              category: data.category,
-              description: data.description
-          }),
-      });
-
-      if (response.ok) {
-          console.log("Uspešno poslato u Javu!");
-      } else {
-          console.error("Greška pri slanju.");
-      }
-  } catch (error) {
-      console.error("Mrežna greška:", error);
-  }
+  /**
+   * Form submission handler
+   * Triggers the onSave callback and resets the form to default values.
+   */
+  const onSubmit = (data: ExpenseFormData) => {
+    onSave(data);
+    reset({
+      description: "",
+      amount: 0,
+      category: "Representation"
+    });
   };
 
   return (
-    <div
-      className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
-    >
-      <h2
-        className="text-xl font-bold text-gray-900 mb-6"
-      >
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <h2 className="text-xl font-bold text-gray-900 mb-6">
         {expenseToEdit ? "Edit Expense" : "New Expense"}
       </h2>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-4"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <div>
-          <label
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Description
           </label>
           <input
             type="text"
             placeholder="e.g. business lunch"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all text-gray-900"
             {...register("description")}
           />
           {errors.description && (
-            <p
-              className="text-red-500 text-xs font-medium"
-            >
+            <p className="text-red-500 text-xs font-medium">
               {errors.description.message as string}
             </p>
           )}
         </div>
 
         <div>
-          <label
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Amount ($)
           </label>
           <input
             type="number"
             placeholder="0.00"
             step="0.01"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all text-gray-900"
             {...register("amount")}
           />
           {errors.amount && (
-            <p
-              className="text-red-500 text-xs font-medium"
-            >
+            <p className="text-red-500 text-xs font-medium">
               {errors.amount.message as string}
             </p>
           )}
         </div>
 
         <div>
-          <label
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Category
           </label>
           <select
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all text-gray-900"
             {...register("category")}
           >
             <option value="Representation">Representation</option>
@@ -145,9 +128,7 @@ export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps)
             <option value="Education">Education</option>
           </select>
           {errors.category && (
-            <p
-              className="text-red-500 text-xs font-medium"
-            >
+            <p className="text-red-500 text-xs font-medium">
               {errors.category.message as string}
             </p>
           )}

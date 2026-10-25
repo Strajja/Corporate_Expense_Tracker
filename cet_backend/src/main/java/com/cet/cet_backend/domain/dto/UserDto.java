@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * Data Transfer Object representing detailed user account information.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,34 +20,34 @@ public class UserDto {
 
     private Long id;
 
-    @NotBlank(message = "First name must not be blank")
-    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
+    @NotBlank(message = "First name must not be blank.")
+    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters.")
     private String firstName;
 
-    @NotBlank(message = "Last name must not be blank")
+    @NotBlank(message = "Last name must not be blank.")
     private String lastName;
 
-    @NotBlank(message = "Email must not be blank")
-    @Email(message = "Email must be in a valid format")
+    @NotBlank(message = "Email must not be blank.")
+    @Email(message = "Email must be in a valid format.")
     private String emailAddress;
 
-    @NotBlank(message = "Username is required")
+    @NotBlank(message = "Username is required.")
     private String username;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters long")
+    @NotBlank(message = "Password is required.")
+    @Size(min = 6, message = "Password must be at least 6 characters long.")
     private String password;
 
-    @NotNull(message = "Date of birth is required")
-    @Past(message = "Date of birth must be in the past")
+    @NotNull(message = "Date of birth is required.")
+    @Past(message = "Date of birth must be in the past.")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
 
-    @NotNull(message = "Hire date is required")
+    @NotNull(message = "Hire date is required.")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate hireDate;
 
-    @NotBlank(message = "Role is required")
+    @NotBlank(message = "Role is required.")
     private String role;
 
     private Long managerId;
