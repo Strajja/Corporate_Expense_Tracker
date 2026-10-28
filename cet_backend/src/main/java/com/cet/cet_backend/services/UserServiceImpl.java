@@ -57,6 +57,15 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Old password does not match");
         }
 
+        if (oldPassword.equals(newPassword)) {
+            throw new RuntimeException("New password cannot be the same as the old password.");
+        }
+
+        String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+        if (!newPassword.matches(regex)) {
+            throw new RuntimeException("Password must contain at least 8 characters, an uppercase letter, a number, and a special character.");
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
@@ -120,7 +129,15 @@ public class UserServiceImpl implements UserService {
             return List.of();
         }
 
-        return userRepository.findAllByManagerId(targetManagerId).stream()
+        List<UserEntity> team = new java.util.ArrayList<>(userRepository.findAllByManagerId(targetManagerId));
+
+        userRepository.findById(targetManagerId).ifPresent(manager -> {
+            if (team.stream().noneMatch(u -> u.getId().equals(manager.getId()))) {
+                team.add(0, manager);
+            }
+        });
+
+        return team.stream()
                 .map(userMapper::mapTo)
                 .collect(Collectors.toList());
     }
