@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="text-center md:text-left">
           <p className="text-sm">
             &copy; {new Date().getFullYear()} Corporate Expense Tracker. All rights reserved. 
-            <span className="ml-2 text-xs text-gray-500 font-mono">v1.0.0</span>
+            <span className="ml-2 text-xs text-gray-500 font-mono">v1.1.0</span>
           </p>
         </div>
         
