@@ -17,6 +17,8 @@ public interface UserService {
 
     void changeUsername(String currentUsername, String newUsername);
 
+    void changeLanguage(String username, String language);
+
     UserDto updateUserByAdmin(Long userId, UserDto userDto);
 
     List<UserDto> findTeamMembers(String managerUsername);

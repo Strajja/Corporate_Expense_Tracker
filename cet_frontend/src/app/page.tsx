@@ -8,6 +8,7 @@ import CategoryChart from "./components/CategoryChart";
 import TopExpensesTable from "./components/TopExpensesTable";
 import TimeChart from "./components/TimeChart";
 import PendingApprovals from "./components/PendingApprovals";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Expense {
   id: string;
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const [role, setRole] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const router = useRouter();
+  const { t } = useLanguage();
 
   // Validate session presence and role, then hydrate the dashboard with expense data
   useEffect(() => {
@@ -99,10 +101,10 @@ export default function Dashboard() {
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {username}
+            {t('welcomeBack')}, {username}
           </h1>
           <p className="text-gray-500 mt-1">
-            Logged in as: <span className="font-semibold text-[#8e082d] uppercase text-sm">{role}</span>
+            {t('loggedInAs')}: <span className="font-semibold text-[#8e082d] uppercase text-sm">{role}</span>
           </p>
         </div>
       </div>
@@ -110,22 +112,22 @@ export default function Dashboard() {
       {/* High-Level Metric Summaries */}
       <div className={`grid grid-cols-1 ${canApprove ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 mb-8`}>
         <SummaryCard
-          title="Total Expenses"
+          title={t('totalExpenses')}
           amount={`$${totalExpensesAmount.toFixed(2)}`}
-          description="Total recorded expenses"
+          description={t('totalRecordedExpenses')}
           trend="negative"
         />
         <SummaryCard
-          title="Approved Budget"
+          title={t('approvedBudget')}
           amount={`$${approvedExpensesAmount.toFixed(2)}`}
-          description="Total approved spending"
+          description={t('totalApprovedSpending')}
           trend="positive"
         />
         {canApprove && (
           <SummaryCard
-            title="Pending Requests"
-            amount={`${pendingCount} requests`}
-            description="Requires action"
+            title={t('pendingRequests')}
+            amount={`${pendingCount} ${t('requests')}`}
+            description={t('requiresAction')}
             trend="neutral"
           />
         )}

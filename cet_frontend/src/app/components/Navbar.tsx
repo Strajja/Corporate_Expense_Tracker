@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 /**
  * Navbar Component
@@ -13,6 +14,7 @@ export default function Navbar() {
   const pathName = usePathname();
   const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
+  const { language, setLanguage, t } = useLanguage();
 
   // Retrieve user role from local storage to manage route access
   useEffect(() => {
@@ -31,10 +33,17 @@ export default function Navbar() {
   };
 
   /**
-   * Logs out the user by clearing local storage and redirecting to the auth page.
+   * Logs out the user by clearing local storage (but keeping language) and redirecting.
    */
   const handleLogout = () => {
+    const savedLanguage = localStorage.getItem("language");
     localStorage.clear();
+    
+    // Restore language after clearing other data (tokens, role, etc.)
+    if (savedLanguage) {
+      localStorage.setItem("language", savedLanguage);
+    }
+    
     router.push("/auth");
   };
 
@@ -54,12 +63,12 @@ export default function Navbar() {
       <ul className="absolute left-1/2 -translate-x-1/2 flex flex-row items-center gap-8">
         <li>
           <Link href="/" className={`transition-colors duration-300 font-medium ${getLinkColor("/")}`}>
-            Dashboard
+            {t("dashboard")}
           </Link>
         </li>
         <li>
           <Link href="/expenses" className={`transition-colors duration-300 font-medium ${getLinkColor("/expenses")}`}>
-            Expenses
+            {t("expenses")}
           </Link>
         </li>
         
@@ -67,7 +76,7 @@ export default function Navbar() {
         {(role === "manager" || role === "admin") && (
           <li>
             <Link href="/approvals" className={`transition-colors duration-300 font-medium ${getLinkColor("/approvals")}`}>
-              Approvals
+              {t("approvals")}
             </Link>
           </li>
         )}
@@ -76,24 +85,40 @@ export default function Navbar() {
         {(role === "manager" || role === "admin" || role === "employee") && (
           <li>
             <Link href="/team" className={`transition-colors duration-300 font-medium ${getLinkColor("/team")}`}>
-              Team
+              {t("myTeam")}
             </Link>
           </li>
         )}
         
         <li>
           <Link href="/account" className={`transition-colors duration-300 font-medium ${getLinkColor("/account")}`}>
-            Account
+            {t("account")}
           </Link>
         </li>
       </ul>
 
-      <div>
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2 font-bold text-sm">
+          <button 
+            onClick={() => setLanguage('en')}
+            className={`transition-colors duration-300 cursor-pointer ${language === 'en' ? 'text-[#8e082d]' : 'text-white hover:text-gray-300'}`}
+          >
+            ENG
+          </button>
+          <span className="text-gray-500">|</span>
+          <button 
+            onClick={() => setLanguage('sr')}
+            className={`transition-colors duration-300 cursor-pointer ${language === 'sr' ? 'text-[#8e082d]' : 'text-white hover:text-gray-300'}`}
+          >
+            СРП
+          </button>
+        </div>
+
         <button 
           onClick={handleLogout} 
           className="bg-white text-black px-6 py-2 rounded-lg font-semibold transition-transform duration-300 hover:scale-105"
         >
-          Logout
+          {t("logout")}
         </button>
       </div>
     </nav>

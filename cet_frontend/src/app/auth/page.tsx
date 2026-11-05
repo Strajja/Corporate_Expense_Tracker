@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 /**
  * AuthPage Component
  * Handles the authentication flow including user login and two-step registration (code verification & account creation).
  */
 export default function AuthPage() {
+  const { t, language, setLanguage } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   const [registerStep, setRegisterStep] = useState(1);
   const [inviteCode, setInviteCode] = useState('');
@@ -39,7 +41,7 @@ export default function AuthPage() {
     if (inviteCode.trim() !== '') {
       setRegisterStep(2);
     } else {
-      setError('Please enter your invitation code.');
+      setError(t('errorInvalidCode'));
     }
   };
 
@@ -51,7 +53,7 @@ export default function AuthPage() {
     setError('');
 
     if (!username || !password) {
-      setError('Please fill in all fields.');
+      setError(t('errorFillAllFields'));
       return;
     }
 
@@ -62,6 +64,12 @@ export default function AuthPage() {
       if (token && typeof token === 'string') {
         localStorage.setItem('jwt_token', token);
         localStorage.setItem('username', username);
+        
+        // Store language preference if provided by backend
+        if (response.data.language) {
+          localStorage.setItem('language', response.data.language.toLowerCase());
+          setLanguage(response.data.language.toLowerCase());
+        }
 
         // Decode JWT payload to extract user role securely
         try {
@@ -70,6 +78,7 @@ export default function AuthPage() {
           const payload = JSON.parse(window.atob(base64));
           if (payload.role) {
             localStorage.setItem('user_role', payload.role.toLowerCase());
+            localStorage.setItem('user_id', payload.id || payload.userId || '');
           }
         } catch (e) {
           console.error("Error reading role from token", e);
@@ -77,14 +86,14 @@ export default function AuthPage() {
 
         window.location.href = '/';
       } else {
-        setError('Invalid token format received from server.');
+        setError(t('errorLoginFailed'));
       }
     } catch (err: any) {
       console.error('Login error:', err);
       if (err.response?.status === 401 || err.response?.status === 403 || err.response?.status === 404) {
-        setError('Invalid username or password.');
+        setError(t('errorInvalidCredentials'));
       } else {
-        setError(err.response?.data?.message || err.response?.data || 'An error occurred during login. Please try again.');
+        setError(err.response?.data?.message || err.response?.data || t('errorLoginFailed'));
       }
     }
   };
@@ -97,15 +106,15 @@ export default function AuthPage() {
     setError('');
 
     if (!username || !password || !confirmPassword) {
-      setError('Please fill in all fields.');
+      setError(t('errorFillAllFields'));
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t('errorPasswordMismatch'));
       return;
     }
     if (!validatePassword(password)) {
-      setError('Password must contain at least 8 characters, an uppercase letter, a number, and a special character.');
+      setError(t('errorPasswordStrength'));
       return;
     }
     
@@ -120,6 +129,12 @@ export default function AuthPage() {
 
       if (token && typeof token === 'string') {
         localStorage.setItem('jwt_token', token);
+        
+        // Store language preference if provided by backend
+        if (response.data.language) {
+          localStorage.setItem('language', response.data.language.toLowerCase());
+          setLanguage(response.data.language.toLowerCase());
+        }
 
         try {
           const base64Url = token.split('.')[1];
@@ -127,6 +142,7 @@ export default function AuthPage() {
           const payload = JSON.parse(window.atob(base64));
           if (payload.role) {
             localStorage.setItem('user_role', payload.role.toLowerCase());
+            localStorage.setItem('user_id', payload.id || payload.userId || '');
           }
         } catch (e) {
           console.error("Error reading role from token", e);
@@ -138,7 +154,7 @@ export default function AuthPage() {
       
     } catch (err: any) {
       console.error('Registration error:', err);
-      setError(err.response?.data?.message || err.response?.data || 'Registration failed. Invalid code or username taken.');
+      setError(err.response?.data?.message || err.response?.data || t('errorRegistrationFailed'));
     }
   };
 
@@ -146,9 +162,9 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 w-full max-w-md">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Corporate Expense Tracker</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('appTitle')}</h2>
           <p className="text-sm text-gray-500 mt-2">
-            {isLogin ? 'Enter your credentials to login' : 'New Employee Registration'}
+            {isLogin ? t('loginSubtitle') : t('registerSubtitle')}
           </p>
         </div>
 
@@ -158,11 +174,11 @@ export default function AuthPage() {
           </div>
         )}
 
-        {/* Conditional rendering based on Authentication context (Login vs Verify Code vs Register) */}
+        {/* Conditional rendering based on Authentication context */}
         {isLogin ? (
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('usernameLabel')}</label>
               <input
                 type="text"
                 value={username}
@@ -172,7 +188,7 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('passwordLabel')}</label>
               <input
                 type="password"
                 value={password}
@@ -185,32 +201,32 @@ export default function AuthPage() {
               type="submit"
               className="w-full mt-2 py-3 px-4 bg-[#8e082d] hover:bg-red-900 text-white font-medium rounded-lg transition shadow-sm cursor-pointer"
             >
-              Access System
+              {t('accessSystemBtn')}
             </button>
           </form>
         ) : registerStep === 1 ? (
           <form onSubmit={handleVerifyCode} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Registration Code</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('registrationCodeLabel')}</label>
               <input
                 type="text"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900 placeholder-gray-400"
-                placeholder="Enter invitation code from e-mail"
+                placeholder={t('registrationCodePlaceholder')}
               />
             </div>
             <button
               type="submit"
               className="w-full mt-2 py-3 px-4 bg-[#8e082d] hover:bg-red-900 text-white font-medium rounded-lg transition shadow-sm cursor-pointer"
             >
-              Verify Code
+              {t('verifyCodeBtn')}
             </button>
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('usernameLabel')}</label>
               <input
                 type="text"
                 value={username}
@@ -219,7 +235,7 @@ export default function AuthPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('passwordLabel')}</label>
               <input
                 type="password"
                 value={password}
@@ -228,7 +244,7 @@ export default function AuthPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('confirmPasswordLabel')}</label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -240,7 +256,7 @@ export default function AuthPage() {
               type="submit"
               className="w-full mt-2 py-3 px-4 bg-[#8e082d] hover:bg-red-900 text-white font-medium rounded-lg transition shadow-sm cursor-pointer"
             >
-              Create Account
+              {t('createAccountBtn')}
             </button>
           </form>
         )}
@@ -258,7 +274,26 @@ export default function AuthPage() {
             }}
             className="text-sm text-[#8e082d] hover:underline font-medium cursor-pointer"
           >
-            {isLogin ? 'Have an invitation code? Register' : 'Already have an account? Login'}
+            {isLogin ? t('switchToRegister') : t('switchToLogin')}
+          </button>
+        </div>
+
+        {/* Language Switcher for Auth Page */}
+        <div className="mt-8 flex items-center justify-center gap-3 font-bold text-sm border-t border-gray-100 pt-6">
+          <button 
+            type="button"
+            onClick={() => setLanguage('en')}
+            className={`transition-colors duration-300 cursor-pointer ${language === 'en' ? 'text-[#8e082d]' : 'text-gray-400 hover:text-gray-800'}`}
+          >
+            ENG
+          </button>
+          <span className="text-gray-300">|</span>
+          <button 
+            type="button"
+            onClick={() => setLanguage('sr')}
+            className={`transition-colors duration-300 cursor-pointer ${language === 'sr' ? 'text-[#8e082d]' : 'text-gray-400 hover:text-gray-800'}`}
+          >
+            СРП
           </button>
         </div>
       </div>

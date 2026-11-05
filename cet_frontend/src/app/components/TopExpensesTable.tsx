@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export interface Expense {
   id: string;
@@ -18,6 +19,8 @@ interface TopExpensesTableProps {
  * Calculates and displays the highest single expense record for each specific category.
  */
 export default function TopExpensesTable({ expenses }: TopExpensesTableProps) {
+  const { t } = useLanguage();
+
   // Reduces the expenses array to extract only the highest expense value per category
   const topExpensesMap = expenses.reduce((acc: { [key: string]: Expense }, expense) => {
     if (!acc[expense.category] || expense.amount > acc[expense.category].amount) {
@@ -34,7 +37,7 @@ export default function TopExpensesTable({ expenses }: TopExpensesTableProps) {
     return (
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-center h-[350px]">
         <p className="text-gray-500 font-medium">
-          No data available to display.
+          {t('noDataAvailable')}
         </p>
       </div>
     );
@@ -43,22 +46,22 @@ export default function TopExpensesTable({ expenses }: TopExpensesTableProps) {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 w-full h-[350px] flex flex-col overflow-hidden">
       <h2 className="text-xl font-bold text-gray-900 mb-4">
-        Top Expenses by Category
+        {t('topExpensesByCategory')}
       </h2>
       <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-gray-200 text-xs text-gray-500 uppercase tracking-wider sticky top-0 bg-white">
-              <th className="pb-3 font-medium">Category</th>
-              <th className="pb-3 font-medium">Main Expense (Desc)</th>
-              <th className="pb-3 font-medium text-right">Amount</th>
+              <th className="pb-3 font-medium">{t('category')}</th>
+              <th className="pb-3 font-medium">{t('mainExpenseDesc')}</th>
+              <th className="pb-3 font-medium text-right">{t('amount')}</th>
             </tr>
           </thead>
           <tbody className="text-sm">
             {topExpenses.map((expense) => (
               <tr key={expense.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                 <td className="py-4 font-medium text-gray-900">
-                  {expense.category}
+                  {t(`category_${expense.category}`)}
                 </td>
                 <td className="py-4 text-gray-500 truncate max-w-[150px]" title={expense.description}>
                   {expense.description}

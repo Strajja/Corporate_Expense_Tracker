@@ -3,7 +3,9 @@ package com.cet.cet_backend.services;
 import com.cet.cet_backend.domain.dto.UserDto;
 import com.cet.cet_backend.domain.entities.Role;
 import com.cet.cet_backend.domain.entities.UserEntity;
+import com.cet.cet_backend.domain.entities.UserPreferencesEntity;
 import com.cet.cet_backend.mappers.Mapper;
+import com.cet.cet_backend.repository.UserPreferencesRepository;
 import com.cet.cet_backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,11 +21,13 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserPreferencesRepository userPreferencesRepository;
     private final Mapper<UserEntity, UserDto> userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, Mapper<UserEntity, UserDto> userMapper, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, UserPreferencesRepository userPreferencesRepository, Mapper<UserEntity, UserDto> userMapper, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.userPreferencesRepository = userPreferencesRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
     }
@@ -38,13 +42,25 @@ public class UserServiceImpl implements UserService {
         }
 
         UserEntity savedUser = userRepository.save(userEntity);
-        return userMapper.mapTo(savedUser);
+
+        UserPreferencesEntity preferences = new UserPreferencesEntity(savedUser);
+        userPreferencesRepository.save(preferences);
+
+        UserDto resultDto = userMapper.mapTo(savedUser);
+        resultDto.setLanguage(preferences.getLanguage());
+        return resultDto;
     }
 
     @Override
     public List<UserDto> findAllUsers() {
         return userRepository.findAll().stream()
-                .map(userMapper::mapTo)
+                .map(user -> {
+                    UserDto dto = userMapper.mapTo(user);
+                    if (user.getPreferences() != null) {
+                        dto.setLanguage(user.getPreferences().getLanguage());
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -97,6 +113,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void changeLanguage(String username, String language) {
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        UserPreferencesEntity preferences = userPreferencesRepository.findByUserId(user.getId())
+                .orElse(new UserPreferencesEntity(user));
+
+        preferences.setLanguage(language);
+        userPreferencesRepository.save(preferences);
+    }
+
+    @Override
     public UserDto updateUserByAdmin(Long userId, UserDto userDto) {
         UserEntity existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -115,7 +143,12 @@ public class UserServiceImpl implements UserService {
         }
 
         UserEntity savedUser = userRepository.save(existingUser);
-        return userMapper.mapTo(savedUser);
+
+        UserDto resultDto = userMapper.mapTo(savedUser);
+        if (savedUser.getPreferences() != null) {
+            resultDto.setLanguage(savedUser.getPreferences().getLanguage());
+        }
+        return resultDto;
     }
 
     @Override
@@ -138,14 +171,26 @@ public class UserServiceImpl implements UserService {
         });
 
         return team.stream()
-                .map(userMapper::mapTo)
+                .map(u -> {
+                    UserDto dto = userMapper.mapTo(u);
+                    if (u.getPreferences() != null) {
+                        dto.setLanguage(u.getPreferences().getLanguage());
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<UserDto> findUnassignedEmployees() {
         return userRepository.findByRoleAndManagerIdIsNull(Role.EMPLOYEE).stream()
-                .map(userMapper::mapTo)
+                .map(u -> {
+                    UserDto dto = userMapper.mapTo(u);
+                    if (u.getPreferences() != null) {
+                        dto.setLanguage(u.getPreferences().getLanguage());
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

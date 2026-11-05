@@ -51,4 +51,6 @@ public class UserDto {
     private String role;
 
     private Long managerId;
+
+    private String language;
 }

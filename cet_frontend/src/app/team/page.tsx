@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 // Interface defining the structure of a User object
 interface User {
@@ -17,6 +18,7 @@ interface User {
 }
 
 export default function TeamPage() {
+  const { t } = useLanguage();
   // State variables for managing different user lists
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
@@ -155,12 +157,12 @@ export default function TeamPage() {
     setError('');
     try {
       await api.patch(`/users/${id}/assign`);
-      setMessage('Employee successfully assigned to team.');
+      setMessage(t('msgEmployeeAssigned'));
       fetchData(userRole || '');
     } catch (err: any) {
       console.error('Assign error:', err);
       const errData = err.response?.data;
-      setError(typeof errData === 'string' ? errData : errData?.message || 'Failed to assign employee.');
+      setError(typeof errData === 'string' ? errData : errData?.message || t('errorAssignEmployee'));
     }
   };
 
@@ -172,14 +174,14 @@ export default function TeamPage() {
     setError('');
     try {
       await api.patch(`/users/${id}/unassign`);
-      setMessage('Employee removed from team.');
+      setMessage(t('msgEmployeeRemoved'));
       setIsConfirmOpen(false);
       fetchData(userRole || '');
     } catch (err: any) {
       console.error('Unassign error:', err);
       setIsConfirmOpen(false);
       const errData = err.response?.data;
-      setError(typeof errData === 'string' ? errData : errData?.message || 'Failed to unassign employee.');
+      setError(typeof errData === 'string' ? errData : errData?.message || t('errorUnassignEmployee'));
     }
   };
 
@@ -191,14 +193,14 @@ export default function TeamPage() {
     setError('');
     try {
       await api.delete(`/users/${id}`);
-      setMessage('User successfully deleted.');
+      setMessage(t('msgUserDeleted'));
       setIsConfirmOpen(false);
       fetchData(userRole || '');
     } catch (err: any) {
       console.error('Delete error:', err);
       setIsConfirmOpen(false);
       const errData = err.response?.data;
-      setError(typeof errData === 'string' ? errData : errData?.message || 'Failed to delete user.');
+      setError(typeof errData === 'string' ? errData : errData?.message || t('errorDeleteUser'));
     }
   };
 
@@ -238,12 +240,12 @@ export default function TeamPage() {
     try {
       await api.post('/users/invite', payload);
       form.reset();
-      setMessage(`Invitation successfully sent to ${payload.emailAddress} as ${userFormRole}.`);
+      setMessage(`${t('msgInvitationSent')} ${payload.emailAddress} (${userFormRole}).`);
       setActiveTab('team');
     } catch (err: any) {
       console.error('Invite error:', err);
       const errData = err.response?.data;
-      setError(typeof errData === 'string' ? errData : errData?.message || 'Failed to send invitation.');
+      setError(typeof errData === 'string' ? errData : errData?.message || t('errorSendInvitation'));
       setIsSubmitting(false);
       return;
     }
@@ -316,8 +318,8 @@ export default function TeamPage() {
    */
   const handleDeleteAllFromList = () => {
     promptAction(
-      'Bulk Delete Confirmation',
-      `Are you sure you want to delete all ${targetUsers.length} displayed users from this list?`,
+      t('bulkDeleteConfirmTitle'),
+      `${t('bulkDeleteConfirmDesc')} (${targetUsers.length})?`,
       async () => {
         setIsConfirmOpen(false);
         setMessage('');
@@ -334,11 +336,11 @@ export default function TeamPage() {
               await api.delete(`/users/${user.id}`);
             }
           }
-          setMessage('List successfully cleared according to permissions.');
+          setMessage(t('msgBulkDeleteSuccess'));
           fetchData(userRole || '');
         } catch (err: any) {
           console.error('Bulk delete error:', err);
-          setError('An error occurred during bulk deletion.');
+          setError(t('errorBulkDelete'));
         }
       }
     );
@@ -376,12 +378,10 @@ export default function TeamPage() {
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-950">
-            {userRole === 'employee' ? 'Team and User Overview' : 'Team & User Management'}
+            {userRole === 'employee' ? t('teamOverviewTitle') : t('teamManagementTitle')}
           </h1>
           <p className="text-gray-500 mt-1">
-            {userRole === 'employee' 
-              ? 'Overview of your team members and other users in the system.' 
-              : 'Manage system users, team members, and add new members.'}
+            {userRole === 'employee' ? t('teamOverviewDesc') : t('teamManagementDesc')}
           </p>
         </div>
         
@@ -391,7 +391,7 @@ export default function TeamPage() {
             onClick={handleDeleteAllFromList}
             className="bg-[#8e082d] text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-red-900 transition-colors shadow-sm cursor-pointer"
           >
-            Delete all on list ({targetUsers.length})
+            {t('deleteAllOnList')} ({targetUsers.length})
           </button>
         )}
       </div>
@@ -404,7 +404,7 @@ export default function TeamPage() {
             activeTab === 'team' ? 'bg-[#8e082d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          My Team ({teamMembers.length})
+          {t('myTeamTab')} ({teamMembers.length})
         </button>
 
         <button
@@ -413,7 +413,7 @@ export default function TeamPage() {
             activeTab === 'all' ? 'bg-[#8e082d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          All Users ({filteredAllUsers.length})
+          {t('allUsersTab')} ({filteredAllUsers.length})
         </button>
         
         {(userRole === 'admin' || userRole === 'manager') && (
@@ -423,7 +423,7 @@ export default function TeamPage() {
               activeTab === 'unassigned' ? 'bg-[#8e082d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Unassigned ({unassignedEmployees.length})
+            {t('unassignedTab')} ({unassignedEmployees.length})
           </button>
         )}
 
@@ -434,7 +434,7 @@ export default function TeamPage() {
               activeTab === 'add' ? 'bg-[#8e082d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            + Add Member
+            {t('addMemberTab')}
           </button>
         )}
       </div>
@@ -463,7 +463,7 @@ export default function TeamPage() {
                   onClick={() => setRoleFilter(role)}
                   className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${roleFilter === role ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
                 >
-                  {role === 'ALL' ? 'All' : role.charAt(0) + role.slice(1).toLowerCase()}
+                  {role === 'ALL' ? t('allLabel') : t(`role_${role.toLowerCase()}`)}
                 </button>
               ))}
             </div>
@@ -478,7 +478,7 @@ export default function TeamPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
+                placeholder={t('searchPlaceholder')}
                 className="w-full md:w-64 pl-9 pr-4 py-2 text-sm font-medium border border-gray-300 rounded-full focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50 focus:bg-white shadow-sm"
               />
             </div>
@@ -492,7 +492,7 @@ export default function TeamPage() {
                   onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
                   className="px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#8e082d] outline-none font-bold text-gray-700 bg-white cursor-pointer flex items-center justify-between w-auto transition-colors shadow-sm text-sm"
                 >
-                  {sortField === "firstName" ? "Name (A-Z)" : sortField === "username" ? "Username" : "Email"}
+                  {sortField === "firstName" ? t('sortNameAz') : sortField === "username" ? t('sortUsername') : t('sortEmail')}
                   <svg className={`w-4 h-4 ml-2 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
@@ -501,9 +501,9 @@ export default function TeamPage() {
                 {isSortDropdownOpen && (
                   <div className="absolute top-full right-0 mt-2 w-full min-w-max bg-white border border-gray-200 rounded-lg shadow-xl z-10 overflow-hidden">
                     {[
-                      { id: "firstName", name: "Name (A-Z)" },
-                      { id: "username", name: "Username" },
-                      { id: "emailAddress", name: "Email" }
+                      { id: "firstName", name: t('sortNameAz') },
+                      { id: "username", name: t('sortUsername') },
+                      { id: "emailAddress", name: t('sortEmail') }
                     ].map((option) => (
                       <div
                         key={option.id}
@@ -537,18 +537,18 @@ export default function TeamPage() {
       {activeTab === 'team' && (
         <div className="bg-white mt-8 p-6 rounded-xl shadow-sm border border-gray-100 resize-x overflow-auto w-full max-w-full min-w-[300px] relative">
           {processedList.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">No team members found.</div>
+            <div className="p-8 text-center text-gray-500">{t('noTeamMembers')}</div>
           ) : (
             <div className="min-w-[600px]">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 text-sm text-gray-500 uppercase tracking-wider">
-                    <th className="pb-3 font-medium">Name</th>
-                    <th className="pb-3 font-medium">Username</th>
-                    <th className="pb-3 font-medium">Email</th>
-                    <th className="pb-3 font-medium">Role</th>
+                    <th className="pb-3 font-medium">{t('nameLabel')}</th>
+                    <th className="pb-3 font-medium">{t('usernameLabel')}</th>
+                    <th className="pb-3 font-medium">{t('emailLabel')}</th>
+                    <th className="pb-3 font-medium">{t('roleLabel')}</th>
                     {userRole !== 'employee' && (
-                      <th className="pb-3 font-medium text-right">Actions</th>
+                      <th className="pb-3 font-medium text-right">{t('actionsLabel')}</th>
                     )}
                   </tr>
                 </thead>
@@ -559,7 +559,7 @@ export default function TeamPage() {
                         <div 
                           onClick={() => setSelectedUser(member)}
                           className="max-w-[200px] overflow-x-auto whitespace-nowrap font-medium text-gray-900 cursor-pointer hover:text-[#8e082d] transition-colors pb-2 custom-scrollbar"
-                          title="Click for details"
+                          title={t('clickForDetailsTooltip')}
                         >
                           {member.firstName} {member.lastName}
                         </div>
@@ -568,16 +568,16 @@ export default function TeamPage() {
                       <td className="py-4 text-gray-500">{member.emailAddress}</td>
                       <td className="py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${getRoleBadgeColor(member.role)}`}>
-                          {member.role}
+                          {t(`role_${member.role.toLowerCase()}`)}
                         </span>
                       </td>
                       {userRole !== 'employee' && (
                         <td className="py-4 whitespace-nowrap text-right flex justify-end gap-2">
                           <button
-                            onClick={() => promptAction('Removal Confirmation', 'Are you sure you want to remove this employee from the team?', () => handleUnassign(member.id))}
+                            onClick={() => promptAction(t('removalConfirmTitle'), t('removalConfirmDesc'), () => handleUnassign(member.id))}
                             className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold hover:bg-gray-200 transition-colors cursor-pointer text-xs"
                           >
-                            Remove
+                            {t('removeBtn')}
                           </button>
                         </td>
                       )}
@@ -594,24 +594,23 @@ export default function TeamPage() {
       {activeTab === 'all' && (
         <div className="bg-white mt-8 p-6 rounded-xl shadow-sm border border-gray-100 resize-x overflow-auto w-full max-w-full min-w-[300px] relative">
           {processedList.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">No users found.</div>
+            <div className="p-8 text-center text-gray-500">{t('noUsersFound')}</div>
           ) : (
             <div className="min-w-[600px]">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 text-sm text-gray-500 uppercase tracking-wider">
-                    <th className="pb-3 font-medium">Name</th>
-                    <th className="pb-3 font-medium">Username</th>
-                    <th className="pb-3 font-medium">Email</th>
-                    <th className="pb-3 font-medium">Role</th>
+                    <th className="pb-3 font-medium">{t('nameLabel')}</th>
+                    <th className="pb-3 font-medium">{t('usernameLabel')}</th>
+                    <th className="pb-3 font-medium">{t('emailLabel')}</th>
+                    <th className="pb-3 font-medium">{t('roleLabel')}</th>
                     {userRole !== 'employee' && (
-                      <th className="pb-3 font-medium text-right">Actions</th>
+                      <th className="pb-3 font-medium text-right">{t('actionsLabel')}</th>
                     )}
                   </tr>
                 </thead>
                 <tbody className="text-sm">
                   {processedList.map((user) => {
-                    // Update check to allow manager to delete any employee they see on this list
                     const canManagerDelete = userRole === 'manager' && user.role?.toLowerCase() === 'employee';
                     const canAdminDelete = userRole === 'admin';
                     const canDelete = (canAdminDelete || canManagerDelete) && user.id !== currentUserId;
@@ -622,7 +621,7 @@ export default function TeamPage() {
                           <div 
                             onClick={() => setSelectedUser(user)}
                             className="max-w-[200px] overflow-x-auto whitespace-nowrap font-medium text-gray-900 cursor-pointer hover:text-[#8e082d] transition-colors pb-2 custom-scrollbar"
-                            title="Click for details"
+                            title={t('clickForDetailsTooltip')}
                           >
                             {user.firstName} {user.lastName}
                           </div>
@@ -631,17 +630,17 @@ export default function TeamPage() {
                         <td className="py-4 text-gray-500">{user.emailAddress}</td>
                         <td className="py-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${getRoleBadgeColor(user.role)}`}>
-                            {user.role}
+                            {t(`role_${user.role.toLowerCase()}`)}
                           </span>
                         </td>
                         {userRole !== 'employee' && (
                           <td className="py-4 whitespace-nowrap text-right flex justify-end gap-2">
                             {canDelete && (
                               <button
-                                onClick={() => promptAction('Delete Confirmation', 'Are you sure you want to delete this user?', () => executeDelete(user.id))}
+                                onClick={() => promptAction(t('deleteConfirmationTitle'), t('deleteUserConfirmDesc'), () => executeDelete(user.id))}
                                 className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold hover:bg-red-200 transition-colors cursor-pointer text-xs"
                               >
-                                Delete
+                                {t('deleteBtn')}
                               </button>
                             )}
                           </td>
@@ -660,16 +659,16 @@ export default function TeamPage() {
       {activeTab === 'unassigned' && (userRole === 'admin' || userRole === 'manager') && (
         <div className="bg-white mt-8 p-6 rounded-xl shadow-sm border border-gray-100 resize-x overflow-auto w-full max-w-full min-w-[300px] relative">
           {processedList.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">There are no unassigned employees available.</div>
+            <div className="p-8 text-center text-gray-500">{t('noUnassignedEmployees')}</div>
           ) : (
             <div className="min-w-[600px]">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 text-sm text-gray-500 uppercase tracking-wider">
-                    <th className="pb-3 font-medium">Name</th>
-                    <th className="pb-3 font-medium">Username</th>
-                    <th className="pb-3 font-medium">Email</th>
-                    <th className="pb-3 font-medium text-right">Actions</th>
+                    <th className="pb-3 font-medium">{t('nameLabel')}</th>
+                    <th className="pb-3 font-medium">{t('usernameLabel')}</th>
+                    <th className="pb-3 font-medium">{t('emailLabel')}</th>
+                    <th className="pb-3 font-medium text-right">{t('actionsLabel')}</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
@@ -679,7 +678,7 @@ export default function TeamPage() {
                         <div 
                           onClick={() => setSelectedUser(emp)}
                           className="max-w-[200px] overflow-x-auto whitespace-nowrap font-medium text-gray-900 cursor-pointer hover:text-[#8e082d] transition-colors pb-2 custom-scrollbar"
-                          title="Click for details"
+                          title={t('clickForDetailsTooltip')}
                         >
                           {emp.firstName} {emp.lastName}
                         </div>
@@ -691,13 +690,13 @@ export default function TeamPage() {
                           onClick={() => handleAssign(emp.id)}
                           className="bg-black text-white px-3 py-1 rounded-full font-bold hover:bg-gray-800 transition-colors cursor-pointer text-xs"
                         >
-                          Add to My Team
+                          {t('addToMyTeamBtn')}
                         </button>
                         <button
-                          onClick={() => promptAction('Delete Confirmation', 'Are you sure you want to delete this user?', () => executeDelete(emp.id))}
+                          onClick={() => promptAction(t('deleteConfirmationTitle'), t('deleteUserConfirmDesc'), () => executeDelete(emp.id))}
                           className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold hover:bg-red-200 transition-colors cursor-pointer text-xs"
                         >
-                          Delete
+                          {t('deleteBtn')}
                         </button>
                       </td>
                     </tr>
@@ -713,7 +712,7 @@ export default function TeamPage() {
       {activeTab === 'add' && (userRole === 'admin' || userRole === 'manager') && (
         <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-6 mt-8">
           <div className="flex justify-between items-center border-b pb-4">
-            <h2 className="text-xl font-bold text-gray-900">Add New System Member</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t('addNewMemberTitle')}</h2>
             <div className="flex gap-3">
               <button
                 type="button"
@@ -722,7 +721,7 @@ export default function TeamPage() {
                   userFormRole === 'EMPLOYEE' ? 'bg-[#8e082d] text-white' : 'bg-gray-100 text-gray-700'
                 }`}
               >
-                Employee
+                {t('role_employee')}
               </button>
               {userRole === 'admin' && (
                 <button
@@ -732,7 +731,7 @@ export default function TeamPage() {
                     userFormRole === 'MANAGER' ? 'bg-[#8e082d] text-white' : 'bg-gray-100 text-gray-700'
                   }`}
                 >
-                  Manager
+                  {t('role_manager')}
                 </button>
               )}
             </div>
@@ -740,23 +739,23 @@ export default function TeamPage() {
 
           <form onSubmit={handleUserSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('firstNameLabel')}</label>
               <input required type="text" name="firstName" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900" placeholder="John" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('lastNameLabel')}</label>
               <input required type="text" name="lastName" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900" placeholder="Doe" />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('emailAddressLabel')}</label>
               <input required type="email" name="emailAddress" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900" placeholder="email@company.com" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Date of Birth</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('dobLabel')}</label>
               <input required type="date" name="dateOfBirth" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Hire Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('hireDateLabel')}</label>
               <input required type="date" name="hireDate" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900" />
             </div>
             <div className="md:col-span-2 flex justify-end gap-4 pt-4">
@@ -765,14 +764,14 @@ export default function TeamPage() {
                 onClick={() => setActiveTab('team')}
                 className="px-6 py-3 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium rounded-lg transition cursor-pointer"
               >
-                Cancel
+                {t('cancelBtn')}
               </button>
               <button 
                 type="submit" 
                 disabled={isSubmitting}
                 className={`px-8 py-3 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#8e082d] hover:bg-red-900 cursor-pointer'} text-white font-medium rounded-lg transition shadow-sm`}
               >
-                {isSubmitting ? 'Sending...' : 'Generate & Send Code'}
+                {isSubmitting ? t('sendingBtn') : t('generateSendCodeBtn')}
               </button>
             </div>
           </form>
@@ -785,7 +784,7 @@ export default function TeamPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">User Details</h3>
+                <h3 className="text-2xl font-bold text-gray-900">{t('userDetailsTitle')}</h3>
                 <button 
                   onClick={() => setSelectedUser(null)}
                   className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
@@ -798,7 +797,7 @@ export default function TeamPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Full Name</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('fullNameLabel')}</label>
                   <p className="mt-1 text-gray-900 text-base leading-relaxed font-medium">
                     {selectedUser.firstName} {selectedUser.lastName}
                   </p>
@@ -806,19 +805,19 @@ export default function TeamPage() {
                 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Username</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('usernameLabel')}</label>
                     <p className="mt-1 font-medium text-gray-900">{selectedUser.username}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Role</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('roleLabel')}</label>
                     <div className="mt-1">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${getRoleBadgeColor(selectedUser.role)}`}>
-                        {selectedUser.role}
+                        {t(`role_${selectedUser.role.toLowerCase()}`)}
                       </span>
                     </div>
                   </div>
                   <div className="col-span-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('emailAddressLabel')}</label>
                     <p className="mt-1 font-medium text-gray-900">{selectedUser.emailAddress}</p>
                   </div>
                 </div>
@@ -830,7 +829,7 @@ export default function TeamPage() {
                 onClick={() => setSelectedUser(null)}
                 className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800 transition-colors cursor-pointer"
               >
-                Close
+                {t('closeBtn')}
               </button>
             </div>
           </div>
@@ -860,13 +859,13 @@ export default function TeamPage() {
                 onClick={() => setIsConfirmOpen(false)}
                 className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors cursor-pointer"
               >
-                Cancel
+                {t('cancelBtn')}
               </button>
               <button 
                 onClick={confirmAction || undefined}
                 className="bg-red-600 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors shadow-sm cursor-pointer"
               >
-                Confirm
+                {t('confirmBtn')}
               </button>
             </div>
           </div>

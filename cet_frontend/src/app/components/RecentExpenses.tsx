@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export interface Expense {
   id: string;
@@ -26,6 +27,7 @@ interface RecentExpensesProps {
  */
 export default function RecentExpenses({ noResize = false, data, onDelete, onEdit }: RecentExpensesProps) {
   const [selectedExpense, setSelectedExpense] = useState<any | null>(null);
+  const { t } = useLanguage();
 
   /**
    * Returns corresponding Tailwind color classes based on the expense status.
@@ -60,20 +62,20 @@ export default function RecentExpenses({ noResize = false, data, onDelete, onEdi
       </style>
 
       <h2 className="text-xl font-bold text-gray-900 mb-6">
-        Recent Expenses
+        {t('recentExpensesTitle')}
       </h2>
       
       <div className="min-w-[600px]">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-gray-200 text-sm text-gray-500 uppercase tracking-wider">
-              <th className="pb-3 font-medium">Description</th>
-              <th className="pb-3 font-medium">Category</th>
-              <th className="pb-3 font-medium">Date</th>
-              <th className="pb-3 font-medium">Amount</th>
-              <th className="pb-3 font-medium">Status</th>
+              <th className="pb-3 font-medium">{t('descriptionLabel')}</th>
+              <th className="pb-3 font-medium">{t('categoryLabel')}</th>
+              <th className="pb-3 font-medium">{t('dateLabel')}</th>
+              <th className="pb-3 font-medium">{t('amountLabel')}</th>
+              <th className="pb-3 font-medium">{t('statusLabel')}</th>
               {hasAnyPending && (
-                <th className="pb-3 font-medium text-right">Actions</th>
+                <th className="pb-3 font-medium text-right">{t('actionsLabel')}</th>
               )}
             </tr>
           </thead>
@@ -84,19 +86,19 @@ export default function RecentExpenses({ noResize = false, data, onDelete, onEdi
                   <div 
                     onClick={() => setSelectedExpense(expense)}
                     className="max-w-[200px] overflow-x-auto whitespace-nowrap font-medium text-gray-900 cursor-pointer hover:text-[#8e082d] transition-colors pb-2 custom-scrollbar"
-                    title="Click for details"
+                    title={t('clickForDetailsTooltip')}
                   >
                     {expense.description}
                   </div>
                 </td>
-                <td className="py-4 text-gray-500">{expense.category}</td>
+                <td className="py-4 text-gray-500">{t(`category_${expense.category}`)}</td>
                 <td className="py-4 text-gray-500">{expense.date}</td>
                 <td className="py-4 text-gray-900 font-bold">
                   ${expense.amount.toFixed(2)}
                 </td>
                 <td className="py-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(expense.status)}`}>
-                    {expense.status}
+                    {t(`status_${expense.status}`)}
                   </span>
                 </td>
                 {hasAnyPending && (
@@ -105,15 +107,15 @@ export default function RecentExpenses({ noResize = false, data, onDelete, onEdi
                       <>
                         <button
                           onClick={() => onEdit(expense)}
-                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold hover:bg-gray-200 transition-colors"
+                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold hover:bg-gray-200 transition-colors cursor-pointer"
                         >
-                          Edit
+                          {t('editBtn')}
                         </button>
                         <button
                           onClick={() => onDelete(expense.id)}
-                          className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold hover:bg-red-200 transition-colors"
+                          className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold hover:bg-red-200 transition-colors cursor-pointer"
                         >
-                          Delete
+                          {t('deleteBtn')}
                         </button>
                       </>
                     )}
@@ -132,11 +134,11 @@ export default function RecentExpenses({ noResize = false, data, onDelete, onEdi
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Expense Details
+                  {t('expenseDetailsTitle')}
                 </h3>
                 <button 
                   onClick={() => setSelectedExpense(null)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -147,7 +149,7 @@ export default function RecentExpenses({ noResize = false, data, onDelete, onEdi
               <div className="space-y-4">
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Full Description
+                    {t('fullDescriptionLabel')}
                   </label>
                   <p className="mt-1 text-gray-900 text-base leading-relaxed whitespace-pre-wrap">
                     {selectedExpense.description}
@@ -156,24 +158,24 @@ export default function RecentExpenses({ noResize = false, data, onDelete, onEdi
                 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Category</label>
-                    <p className="mt-1 font-medium text-gray-900">{selectedExpense.category}</p>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('categoryLabel')}</label>
+                    <p className="mt-1 font-medium text-gray-900">{t(`category_${selectedExpense.category}`)}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Date</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('dateLabel')}</label>
                     <p className="mt-1 font-medium text-gray-900">{selectedExpense.date}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('amountLabel')}</label>
                     <p className="mt-1 font-bold text-[#8e082d] text-lg">
                       ${selectedExpense.amount.toFixed(2)}
                     </p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('statusLabel')}</label>
                     <div className="mt-1">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(selectedExpense.status)}`}>
-                        {selectedExpense.status}
+                        {t(`status_${selectedExpense.status}`)}
                       </span>
                     </div>
                   </div>
@@ -182,7 +184,7 @@ export default function RecentExpenses({ noResize = false, data, onDelete, onEdi
                 {selectedExpense.comment && (
                   <div className="pt-4 border-t border-gray-100">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                      Review Comment
+                      {t('reviewCommentLabel')}
                     </label>
                     <p className="mt-1 text-gray-900 text-base leading-relaxed whitespace-pre-wrap">
                       {selectedExpense.comment}
@@ -195,9 +197,9 @@ export default function RecentExpenses({ noResize = false, data, onDelete, onEdi
             <div className="bg-gray-50 px-6 py-4 flex justify-end">
               <button 
                 onClick={() => setSelectedExpense(null)}
-                className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800 transition-colors"
+                className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800 transition-colors cursor-pointer"
               >
-                Close
+                {t('closeBtn')}
               </button>
             </div>
           </div>

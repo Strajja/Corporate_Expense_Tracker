@@ -4,18 +4,10 @@ import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from "react-hook-form";
-
-// Validation schema for the expense form
-const expenseSchema = z.object({
-  description: z.string().min(3, "Description must be longer than 3 characters."),
-  amount: z.coerce.number().min(0, "Amount cannot be negative."),
-  category: z.string().min(1, "You must select a category.")
-});
-
-type ExpenseFormData = z.infer<typeof expenseSchema>;
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ExpenseFormProps {
-  onSave: (data: ExpenseFormData) => void;
+  onSave: (data: any) => void;
   expenseToEdit: any | null;
 }
 
@@ -25,6 +17,17 @@ interface ExpenseFormProps {
  * Uses react-hook-form with Zod for validation.
  */
 export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps) {
+  const { t } = useLanguage();
+
+  // Validation schema for the expense form, localized error messages
+  const expenseSchema = z.object({
+    description: z.string().min(3, t('validationDescMin')),
+    amount: z.coerce.number().min(0, t('validationAmountMin')),
+    category: z.string().min(1, t('validationCategoryReq'))
+  });
+
+  type ExpenseFormData = z.infer<typeof expenseSchema>;
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -75,17 +78,17 @@ export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps)
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
       <h2 className="text-xl font-bold text-gray-900 mb-6">
-        {expenseToEdit ? "Edit Expense" : "New Expense"}
+        {expenseToEdit ? t('editExpenseTitle') : t('newExpenseTitle')}
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Description
+            {t('descriptionLabel')}
           </label>
           <input
             type="text"
-            placeholder="e.g. business lunch"
+            placeholder={t('descriptionPlaceholder')}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all text-gray-900"
             {...register("description")}
           />
@@ -98,7 +101,7 @@ export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps)
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Amount ($)
+            {t('amountLabel')}
           </label>
           <input
             type="number"
@@ -116,16 +119,16 @@ export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps)
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Category
+            {t('categoryLabel')}
           </label>
           <select
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all text-gray-900"
             {...register("category")}
           >
-            <option value="Representation">Representation</option>
-            <option value="Transport">Transport</option>
-            <option value="Equipment">Equipment</option>
-            <option value="Education">Education</option>
+            <option value="Representation">{t('category_Representation')}</option>
+            <option value="Transport">{t('category_Transport')}</option>
+            <option value="Equipment">{t('category_Equipment')}</option>
+            <option value="Education">{t('category_Education')}</option>
           </select>
           {errors.category && (
             <p className="text-red-500 text-xs font-medium">
@@ -138,7 +141,7 @@ export default function ExpenseForm({ onSave, expenseToEdit }: ExpenseFormProps)
           type="submit"
           className="mt-4 w-full bg-black text-white font-bold py-3 rounded-lg hover:bg-[#8e082d] transition-colors duration-300"
         >
-          {expenseToEdit ? "Save Changes" : "Add Expense"}
+          {expenseToEdit ? t('saveChangesBtn') : t('addExpenseBtn')}
         </button>
       </form>
     </div>

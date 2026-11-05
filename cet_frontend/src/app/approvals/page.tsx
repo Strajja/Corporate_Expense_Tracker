@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Expense {
   id: string;
@@ -16,13 +17,8 @@ interface Expense {
   comment?: string;
 }
 
-const statusOptions = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' }
-];
-
 export default function ApprovalsPage() {
+  const { t } = useLanguage();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
@@ -46,6 +42,12 @@ export default function ApprovalsPage() {
   const statusFilterDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 5;
+
+  const statusOptions = [
+    { value: 'pending', label: t('status_pending') },
+    { value: 'approved', label: t('status_approved') },
+    { value: 'rejected', label: t('status_rejected') }
+  ];
 
   useEffect(() => {
     const storedRole = localStorage.getItem('user_role');
@@ -196,15 +198,15 @@ export default function ApprovalsPage() {
 
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Request Management</h1>
-          <p className="text-gray-500 mt-1">Review, approve, and reject submitted employee expenses.</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('requestManagement')}</h1>
+          <p className="text-gray-500 mt-1">{t('requestManagementDesc')}</p>
         </div>
         {filteredExpenses.length > 0 && (
           <button
             onClick={() => setIsDeleteAllConfirmOpen(true)}
             className="bg-[#8e082d] text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-red-900 transition-colors shadow-sm cursor-pointer"
           >
-            Delete all on list ({filteredExpenses.length})
+            {t('deleteAllOnList')} ({filteredExpenses.length})
           </button>
         )}
       </div>
@@ -217,7 +219,7 @@ export default function ApprovalsPage() {
               onClick={() => { setCategoryFilter(cat); setCurrentPage(1); }}
               className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${categoryFilter === cat ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
             >
-              {cat}
+              {cat === "All" ? t('allLabel') : t(`category_${cat}`)}
             </button>
           ))}
         </div>
@@ -232,7 +234,7 @@ export default function ApprovalsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-            placeholder="Search..."
+            placeholder={t('searchPlaceholder')}
             className="w-48 pl-9 pr-4 py-2 text-sm font-medium border border-gray-300 rounded-full focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50 focus:bg-white shadow-sm"
           />
         </div>
@@ -247,7 +249,7 @@ export default function ApprovalsPage() {
             }}
             className={`px-4 py-2 border rounded-full focus:ring-2 focus:ring-[#8e082d] outline-none font-bold transition-colors cursor-pointer flex items-center justify-between w-auto shadow-sm ${getStatusColor(statusFilter)}`}
           >
-            {statusFilter}
+            {statusFilter === "All Statuses" ? t('allStatuses') : t(`status_${statusFilter.toLowerCase()}`)}
             <svg className={`w-4 h-4 ml-2 transition-transform ${isStatusFilterDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -264,7 +266,7 @@ export default function ApprovalsPage() {
                   }}
                   className={`px-4 py-3 cursor-pointer text-sm font-bold transition-colors hover:bg-gray-100 ${statusFilter === status ? "bg-gray-50 text-[#8e082d]" : "text-gray-700"}`}
                 >
-                  {status}
+                  {status === "All Statuses" ? t('allStatuses') : t(`status_${status}`)}
                 </div>
               ))}
             </div>
@@ -280,7 +282,7 @@ export default function ApprovalsPage() {
               }}
               className="px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#8e082d] outline-none font-bold text-gray-700 bg-white cursor-pointer flex items-center justify-between w-auto transition-colors shadow-sm text-sm"
             >
-              {sortCriterion === "date" ? "Date" : sortCriterion === "amount" ? "Amount" : "Description (A-Z)"}
+              {sortCriterion === "date" ? t('sortDate') : sortCriterion === "amount" ? t('sortAmount') : t('sortDescription')}
               <svg className={`w-4 h-4 ml-2 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
@@ -289,9 +291,9 @@ export default function ApprovalsPage() {
             {isSortDropdownOpen && (
               <div className="absolute top-full right-0 mt-2 w-full min-w-max bg-white border border-gray-200 rounded-lg shadow-xl z-10 overflow-hidden">
                 {[
-                  { id: "description", name: "Description (A-Z)" },
-                  { id: "date", name: "Date" },
-                  { id: "amount", name: "Amount" }
+                  { id: "description", name: t('sortDescription') },
+                  { id: "date", name: t('sortDate') },
+                  { id: "amount", name: t('sortAmount') }
                 ].map((option) => (
                   <div
                     key={option.id}
@@ -320,18 +322,18 @@ export default function ApprovalsPage() {
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 w-full relative">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Expenses</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-6">{t('recentExpensesTitle')}</h2>
         <div className="min-w-[600px] overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-200 text-sm text-gray-500 uppercase tracking-wider">
-                <th className="pb-3 font-medium">Employee</th>
-                <th className="pb-3 font-medium">Description</th>
-                <th className="pb-3 font-medium">Category</th>
-                <th className="pb-3 font-medium">Date</th>
-                <th className="pb-3 font-medium">Amount</th>
-                <th className="pb-3 font-medium">Status</th>
-                <th className="pb-3 font-medium text-right">Actions</th>
+                <th className="pb-3 font-medium">{t('employeeLabel')}</th>
+                <th className="pb-3 font-medium">{t('descriptionLabel')}</th>
+                <th className="pb-3 font-medium">{t('categoryLabel')}</th>
+                <th className="pb-3 font-medium">{t('dateLabel')}</th>
+                <th className="pb-3 font-medium">{t('amountLabel')}</th>
+                <th className="pb-3 font-medium">{t('statusLabel')}</th>
+                <th className="pb-3 font-medium text-right">{t('actionsLabel')}</th>
               </tr>
             </thead>
             <tbody className="text-sm">
@@ -347,12 +349,12 @@ export default function ApprovalsPage() {
                       {expense.description}
                     </div>
                   </td>
-                  <td className="py-4 text-gray-500">{expense.category}</td>
+                  <td className="py-4 text-gray-500">{t(`category_${expense.category}`)}</td>
                   <td className="py-4 text-gray-500">{expense.date}</td>
                   <td className="py-4 text-gray-900 font-bold">${expense.amount.toFixed(2)}</td>
                   <td className="py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(expense.status)}`}>
-                      {expense.status}
+                      {t(`status_${expense.status}`)}
                     </span>
                   </td>
                   <td className="py-4 whitespace-nowrap text-right flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
@@ -360,13 +362,13 @@ export default function ApprovalsPage() {
                       onClick={() => openModal(expense)}
                       className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold hover:bg-gray-200 transition-colors cursor-pointer"
                     >
-                      Edit
+                      {t('editBtn')}
                     </button>
                     <button
                       onClick={(e) => handleDeleteExpense(expense.id, e)}
                       className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-bold hover:bg-red-200 transition-colors cursor-pointer"
                     >
-                      Delete
+                      {t('deleteBtn')}
                     </button>
                   </td>
                 </tr>
@@ -374,7 +376,7 @@ export default function ApprovalsPage() {
               {displayData.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-gray-400 font-medium">
-                    No requests found.
+                    {t('noRequestsFound')}
                   </td>
                 </tr>
               )}
@@ -385,7 +387,7 @@ export default function ApprovalsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 bg-white px-4 py-3 border border-gray-200 rounded-xl shadow-sm">
             <div className="text-sm text-gray-700 font-medium">
-              Page <span className="font-bold text-gray-900">{currentPage}</span> of <span className="font-bold text-gray-900">{totalPages}</span>
+              {t('page')} <span className="font-bold text-gray-900">{currentPage}</span> {t('of')} <span className="font-bold text-gray-900">{totalPages}</span>
             </div>
             <div className="flex gap-2">
               <button
@@ -393,14 +395,14 @@ export default function ApprovalsPage() {
                 disabled={currentPage === 1}
                 className="px-4 py-2 border rounded-lg text-sm font-bold transition-colors outline-none disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 cursor-pointer"
               >
-                Previous
+                {t('previousBtn')}
               </button>
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 border rounded-lg text-sm font-bold transition-colors outline-none disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 cursor-pointer"
               >
-                Next
+                {t('nextBtn')}
               </button>
             </div>
           </div>
@@ -412,7 +414,7 @@ export default function ApprovalsPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">Expense Details</h3>
+                <h3 className="text-2xl font-bold text-gray-900">{t('expenseDetailsTitle')}</h3>
                 <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -422,46 +424,46 @@ export default function ApprovalsPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Employee</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('employeeLabel')}</label>
                   <p className="mt-1 font-semibold text-gray-900">{selectedExpense.employeeName}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Full Description</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('fullDescriptionLabel')}</label>
                   <p className="mt-1 text-gray-900 text-base leading-relaxed whitespace-pre-wrap">{selectedExpense.description}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Category</label>
-                    <p className="mt-1 font-medium text-gray-900">{selectedExpense.category}</p>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('categoryLabel')}</label>
+                    <p className="mt-1 font-medium text-gray-900">{t(`category_${selectedExpense.category}`)}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Date</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('dateLabel')}</label>
                     <p className="mt-1 font-medium text-gray-900">{selectedExpense.date}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('amountLabel')}</label>
                     <p className="mt-1 font-bold text-[#8e082d] text-lg">${selectedExpense.amount.toFixed(2)}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('statusLabel')}</label>
                     <div className="mt-1">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(selectedExpense.status)}`}>
-                        {selectedExpense.status}
+                        {t(`status_${selectedExpense.status}`)}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-gray-100">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Update Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('updateStatusLabel')}</label>
                   <div className="relative" ref={dropdownRef}>
                     <button
                       type="button"
                       onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
                       className="w-full flex items-center justify-between px-4 py-2.5 bg-white border-2 border-[#8e082d] rounded-xl font-bold text-sm text-gray-900 shadow-sm cursor-pointer"
                     >
-                      <span className="capitalize">{editStatus}</span>
+                      <span className="capitalize">{t(`status_${editStatus}`)}</span>
                       <svg className={`h-4 w-4 transition-transform duration-200 ${isStatusDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                       </svg>
@@ -486,13 +488,13 @@ export default function ApprovalsPage() {
                 </div>
 
                 <div className="pt-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Manager Comment</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('managerCommentLabel')}</label>
                   <textarea
                     value={editComment}
                     onChange={(e) => setEditComment(e.target.value)}
                     rows={3}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8e082d] outline-none text-gray-900 resize-none shadow-sm text-sm"
-                    placeholder="Enter reason for rejection or approval note..."
+                    placeholder={t('managerCommentPlaceholder')}
                   />
                 </div>
               </div>
@@ -503,13 +505,13 @@ export default function ApprovalsPage() {
                 onClick={closeModal}
                 className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors cursor-pointer"
               >
-                Cancel
+                {t('cancelBtn')}
               </button>
               <button 
                 onClick={handleUpdateExpense}
                 className="bg-[#8e082d] text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-red-900 transition-colors shadow-sm cursor-pointer"
               >
-                Confirm
+                {t('confirmBtn')}
               </button>
             </div>
           </div>
@@ -521,7 +523,7 @@ export default function ApprovalsPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900">Delete Confirmation</h3>
+                <h3 className="text-xl font-bold text-gray-900">{t('deleteConfirmationTitle')}</h3>
                 <button onClick={() => setIsDeleteAllConfirmOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -529,7 +531,7 @@ export default function ApprovalsPage() {
                 </button>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Are you sure you want to delete all displayed (filtered) expenses? This action cannot be undone.
+                {t('deleteAllFilteredConfirmDesc')}
               </p>
             </div>
             
@@ -538,13 +540,13 @@ export default function ApprovalsPage() {
                 onClick={() => setIsDeleteAllConfirmOpen(false)}
                 className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors cursor-pointer"
               >
-                Cancel
+                {t('cancelBtn')}
               </button>
               <button 
                 onClick={handleDeleteAllFiltered}
                 className="bg-red-600 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors shadow-sm cursor-pointer"
               >
-                Delete All
+                {t('deleteAllBtn')}
               </button>
             </div>
           </div>

@@ -4,13 +4,24 @@ import ExpenseForm from "@/app/components/ExpenseForm";
 import RecentExpenses from "../components/RecentExpenses";
 import { useState, useEffect, useRef } from "react";
 import api from "@/services/api";
-import { Expense } from "../data/mockData";
+import { useLanguage } from "@/context/LanguageContext";
+
+export interface Expense {
+  id: string;
+  description: string;
+  category: string;
+  amount: number;
+  date: string;
+  status: 'approved' | 'pending' | 'rejected';
+}
+
 
 /**
  * ExpensePage Component
  * Provides a comprehensive layout for managing, filtering, adding, and viewing user expenses.
  */
 export default function ExpensePage() {
+  const { t } = useLanguage();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
   
@@ -173,14 +184,14 @@ export default function ExpensePage() {
 
   return (
     <div className="p-8 w-full max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Expense Management</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">{t('expenseManagement')}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           {/* Header Metric Card */}
           <div className="bg-[#8e082d] text-white p-6 rounded-xl shadow-sm mb-8 flex justify-between items-center">
             <div>
-              <p className="text-sm text-white/80 uppercase tracking-wider font-bold mb-1">Total Expenses</p>
+              <p className="text-sm text-white/80 uppercase tracking-wider font-bold mb-1">{t('totalExpensesAmount')}</p>
               <h2 className="text-4xl font-extrabold">${totalExpenseAmount.toFixed(2)}</h2>
             </div>
             <div className="p-4 bg-white/20 rounded-full">
@@ -199,7 +210,7 @@ export default function ExpensePage() {
                   onClick={() => { setCategoryFilter(category); setCurrentPage(1); }}
                   className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${categoryFilter === category ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
                 >
-                  {category}
+                  {category === "All" ? t('allLabel') : t(`category_${category}`)}
                 </button>
               ))}
             </div>
@@ -214,7 +225,7 @@ export default function ExpensePage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                placeholder="Search..."
+                placeholder={t('searchPlaceholder')}
                 className="w-48 pl-9 pr-4 py-2 text-sm font-medium border border-gray-300 rounded-full focus:ring-2 focus:ring-[#8e082d] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50 focus:bg-white shadow-sm"
               />
             </div>
@@ -230,7 +241,7 @@ export default function ExpensePage() {
                 }}
                 className={`px-4 py-2 border rounded-full focus:ring-2 focus:ring-[#8e082d] outline-none font-bold transition-colors cursor-pointer flex items-center justify-between w-auto shadow-sm ${getStatusColor(statusFilter)}`}
               >
-                {statusFilter}
+                {statusFilter === "All Statuses" ? t('allStatuses') : t(`status_${statusFilter.toLowerCase()}`)}
                 <svg className={`w-4 h-4 ml-2 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -247,7 +258,7 @@ export default function ExpensePage() {
                       }}
                       className={`px-4 py-3 cursor-pointer text-sm font-bold transition-colors hover:bg-gray-100 ${statusFilter === status ? "bg-gray-50 text-[#8e082d]" : "text-gray-700"}`}
                     >
-                      {status}
+                      {status === "All Statuses" ? t('allStatuses') : t(`status_${status}`)}
                     </div>
                   ))}
                 </div>
@@ -263,7 +274,7 @@ export default function ExpensePage() {
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#8e082d] outline-none font-bold text-gray-700 bg-white cursor-pointer flex items-center justify-between w-auto transition-colors shadow-sm text-sm"
                 >
-                  {sortCriterion === "date" ? "Date" : sortCriterion === "amount" ? "Amount" : "Description (A-Z)"}
+                  {sortCriterion === "date" ? t('sortDate') : sortCriterion === "amount" ? t('sortAmount') : t('sortDescription')}
                   <svg className={`w-4 h-4 ml-2 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
@@ -272,9 +283,9 @@ export default function ExpensePage() {
                 {isSortDropdownOpen && (
                   <div className="absolute top-full right-0 mt-2 w-full min-w-max bg-white border border-gray-200 rounded-lg shadow-xl z-10 overflow-hidden">
                     {[
-                      { id: "description", name: "Description (A-Z)" },
-                      { id: "date", name: "Date" },
-                      { id: "amount", name: "Amount" }
+                      { id: "description", name: t('sortDescription') },
+                      { id: "date", name: t('sortDate') },
+                      { id: "amount", name: t('sortAmount') }
                     ].map((option) => (
                       <div
                         key={option.id}
@@ -313,7 +324,7 @@ export default function ExpensePage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 bg-white px-4 py-3 border border-gray-200 rounded-xl shadow-sm">
               <div className="text-sm text-gray-700 font-medium">
-                Page <span className="font-bold text-gray-900">{currentPage}</span> of <span className="font-bold text-gray-900">{totalPages}</span>
+                {t('page')} <span className="font-bold text-gray-900">{currentPage}</span> {t('of')} <span className="font-bold text-gray-900">{totalPages}</span>
               </div>
               <div className="flex gap-2">
                 <button
@@ -321,14 +332,14 @@ export default function ExpensePage() {
                   disabled={currentPage === 1}
                   className={`px-4 py-2 border rounded-lg text-sm font-bold transition-colors outline-none focus:ring-2 focus:ring-[#8e082d] cursor-pointer ${currentPage === 1 ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-100"}`}
                 >
-                  Previous
+                  {t('previousBtn')}
                 </button>
                 <button
                   onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className={`px-4 py-2 border rounded-lg text-sm font-bold transition-colors outline-none focus:ring-2 focus:ring-[#8e082d] cursor-pointer ${currentPage === totalPages ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-100"}`}
                 >
-                  Next
+                  {t('nextBtn')}
                 </button>
               </div>
             </div>

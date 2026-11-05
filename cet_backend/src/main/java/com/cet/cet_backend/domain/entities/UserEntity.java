@@ -55,6 +55,10 @@ public class UserEntity implements UserDetails {
     @Column(name = "last_username_change_date")
     private LocalDateTime lastUsernameChangeDate;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private UserPreferencesEntity preferences;
+
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<ExpenseEntity> myExpenses;

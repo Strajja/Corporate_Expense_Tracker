@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export interface Expense {
   id: string;
@@ -21,6 +22,7 @@ interface PendingApprovalsProps {
  * Filters and displays a list of pending expenses, allowing managers to approve or reject them.
  */
 export default function PendingApprovals({ expenses, onAction }: PendingApprovalsProps) {
+  const { t } = useLanguage();
   const pending = expenses.filter(e => e.status === 'pending');
 
   if (pending.length === 0) return null;
@@ -28,7 +30,7 @@ export default function PendingApprovals({ expenses, onAction }: PendingApproval
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 w-full">
       <h2 className="text-xl font-bold text-gray-900 mb-4">
-        Pending Requests ({pending.length})
+        {t('pendingRequestsTitle')} ({pending.length})
       </h2>
       <div className="space-y-4">
         {pending.map((item) => (
@@ -38,7 +40,7 @@ export default function PendingApprovals({ expenses, onAction }: PendingApproval
                 {item.description}
               </p>
               <p className="text-sm text-gray-500">
-                {item.category} • ${item.amount.toFixed(2)}
+                {t(`category_${item.category}`)} • ${item.amount.toFixed(2)}
               </p>
             </div>
             <div className="flex gap-2">
@@ -46,13 +48,13 @@ export default function PendingApprovals({ expenses, onAction }: PendingApproval
                 onClick={() => onAction(item.id, 'rejected')}
                 className="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition"
               >
-                Reject
+                {t('rejectBtn')}
               </button>
               <button 
                 onClick={() => onAction(item.id, 'approved')}
                 className="px-3 py-1.5 text-sm font-medium text-white bg-[#8e082d] hover:bg-red-900 rounded-md transition"
               >
-                Approve
+                {t('approveBtn')}
               </button>
             </div>
           </div>

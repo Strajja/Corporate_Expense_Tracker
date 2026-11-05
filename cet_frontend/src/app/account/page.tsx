@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 /**
  * AccountPage Component
  * Provides a user interface for managing account settings, including username and password updates.
  */
 export default function AccountPage() {
+  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [newUsernameInput, setNewUsernameInput] = useState('');
   const [role, setRole] = useState('');
@@ -48,7 +50,7 @@ export default function AccountPage() {
     setPasswordError('');
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match.');
+      setPasswordError(t('errorPasswordMismatch'));
       return;
     }
 
@@ -57,13 +59,13 @@ export default function AccountPage() {
         params: { oldPassword, newPassword }
       });
       
-      setPasswordMessage('Password successfully updated!');
+      setPasswordMessage(t('msgPasswordUpdated'));
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
       console.error('Password update error:', err);
-      setPasswordError(err.response?.data?.message || err.response?.data || 'Failed to update password.');
+      setPasswordError(err.response?.data?.message || err.response?.data || t('errorUpdatePassword'));
     }
   };
 
@@ -78,28 +80,34 @@ export default function AccountPage() {
 
     try {
       await api.patch('/users/me/username', { newUsername: newUsernameInput });
-      setUsernameMessage("Username successfully updated. Please log in again.");
+      setUsernameMessage(t('msgUsernameUpdated'));
       
       setTimeout(() => {
+        const savedLanguage = localStorage.getItem("language");
         localStorage.clear();
+        
+        if (savedLanguage) {
+          localStorage.setItem("language", savedLanguage);
+        }
+        
         router.push('/auth');
       }, 2000);
     } catch (err: any) {
       console.error('Username update error:', err);
-      setUsernameError(err.response?.data?.message || err.response?.data || "Failed to update username");
+      setUsernameError(err.response?.data?.message || err.response?.data || t('errorUpdateUsername'));
     }
   };
 
   return (
     <div className="p-8 w-full max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-        <p className="text-gray-500 mt-1">Manage your profile details and security settings.</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t('accountSettingsTitle')}</h1>
+        <p className="text-gray-500 mt-1">{t('accountSettingsDesc')}</p>
       </div>
 
       {/* Profile Information Section */}
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-6">
-        <h2 className="text-xl font-bold text-gray-900 border-b pb-4">Profile Information</h2>
+        <h2 className="text-xl font-bold text-gray-900 border-b pb-4">{t('profileInfoTitle')}</h2>
         
         {usernameMessage && (
           <div className="p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg font-medium">
@@ -115,7 +123,7 @@ export default function AccountPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Current Username</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('currentUsernameLabel')}</label>
             <input
               type="text"
               disabled
@@ -124,7 +132,7 @@ export default function AccountPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('roleLabel')}</label>
             <input
               type="text"
               disabled
@@ -136,7 +144,7 @@ export default function AccountPage() {
         
         <form onSubmit={handleUsernameChange} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">New Username</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('newUsernameLabel')}</label>
             <div className="flex gap-4">
               <input
                 required
@@ -144,17 +152,17 @@ export default function AccountPage() {
                 value={newUsernameInput}
                 onChange={(e) => setNewUsernameInput(e.target.value)}
                 className="w-full md:w-1/2 px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900"
-                placeholder="Enter new username"
+                placeholder={t('newUsernamePlaceholder')}
               />
               <button
                 type="submit"
                 className="px-6 py-2.5 bg-black hover:bg-gray-800 text-white font-medium rounded-lg transition shadow-sm whitespace-nowrap cursor-pointer"
               >
-                Change Username
+                {t('changeUsernameBtn')}
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              * You can only change your username once every 30 days.
+              {t('usernameChangeWarning')}
             </p>
           </div>
         </form>
@@ -162,7 +170,7 @@ export default function AccountPage() {
 
       {/* Password Change Section */}
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-6">
-        <h2 className="text-xl font-bold text-gray-900 border-b pb-4">Change Password</h2>
+        <h2 className="text-xl font-bold text-gray-900 border-b pb-4">{t('changePasswordTitle')}</h2>
 
         {passwordMessage && (
           <div className="p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg font-medium">
@@ -178,38 +186,38 @@ export default function AccountPage() {
 
         <form onSubmit={handlePasswordChange} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Old Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('oldPasswordLabel')}</label>
             <input
               required
               type="password"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900"
-              placeholder="Enter current password"
+              placeholder={t('oldPasswordPlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('newPasswordLabel')}</label>
               <input
                 required
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900"
-                placeholder="Enter new password"
+                placeholder={t('newPasswordPlaceholder')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('confirmNewPasswordLabel')}</label>
               <input
                 required
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900"
-                placeholder="Confirm new password"
+                placeholder={t('confirmNewPasswordPlaceholder')}
               />
             </div>
           </div>
@@ -219,7 +227,7 @@ export default function AccountPage() {
               type="submit"
               className="px-8 py-3 bg-[#8e082d] hover:bg-red-900 text-white font-medium rounded-lg transition shadow-sm cursor-pointer"
             >
-              Update Password
+              {t('updatePasswordBtn')}
             </button>
           </div>
         </form>

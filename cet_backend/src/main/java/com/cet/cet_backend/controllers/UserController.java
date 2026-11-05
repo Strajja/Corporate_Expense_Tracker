@@ -150,6 +150,27 @@ public class UserController {
     }
 
     /**
+     * Updates the language preference for the currently authenticated user.
+     *
+     * @param body Map containing the 'language'.
+     * @return ResponseEntity with a success message.
+     */
+    @PatchMapping(path="/me/preferences/language")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'MANAGER', 'ADMIN')")
+    public ResponseEntity<String> changeLanguage(@RequestBody java.util.Map<String, String> body) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        String language = body.get("language");
+
+        if (language == null || language.trim().isEmpty()) {
+            throw new IllegalArgumentException("Language cannot be empty.");
+        }
+
+        userService.changeLanguage(currentUsername, language.toUpperCase());
+        return ResponseEntity.ok("Language preference successfully updated.");
+    }
+
+    /**
      * Allows an administrator to directly update user details.
      *
      * @param userId  The ID of the user to update.

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useLanguage } from '@/context/LanguageContext';
 
 export interface Expense {
   id: string;
@@ -25,6 +26,8 @@ const COLORS = ['#8e082d', '#111827', '#4b5563', '#71717a', '#27272a', '#be123c'
  * It displays the top 5 categories and groups the rest into an "Other" category.
  */
 export default function CategoryChart({ expenses }: CategoryChartProps) {
+  const { t } = useLanguage();
+
   // Extract unique categories from the expenses array
   const uniqueCategories = Array.from(new Set(expenses.map(t => t.category)));
 
@@ -48,7 +51,7 @@ export default function CategoryChart({ expenses }: CategoryChartProps) {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 w-full h-[350px] flex flex-col">
       <h2 className="text-xl font-bold text-gray-900 mb-2">
-        Expense Distribution
+        {t('expenseDistribution')}
       </h2>
       <div className="flex-1 w-full min-h-0">
         <ResponsiveContainer width="100%" height="100%">
@@ -69,6 +72,7 @@ export default function CategoryChart({ expenses }: CategoryChartProps) {
             </Pie>
             <Tooltip
               formatter={(value: number) => `$${value.toFixed(2)}`}
+              labelFormatter={(label) => label === 'Other' ? t('other') : t(`category_${label}`)}
               contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
             />
             <Legend
@@ -76,6 +80,7 @@ export default function CategoryChart({ expenses }: CategoryChartProps) {
               height={36}
               iconType="circle"
               wrapperStyle={{ fontSize: '14px', fontWeight: '500' }}
+              formatter={(value) => value === 'Other' ? t('other') : t(`category_${value}`)}
             />
           </PieChart>
         </ResponsiveContainer>
