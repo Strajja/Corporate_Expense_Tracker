@@ -187,16 +187,42 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    /*
+     * =====================================================================================
+     * ORIGINAL PRODUCTION METHOD
+     * =====================================================================================
+     * This code was used previously for the production environment.
+     * It securely delegates the email sending process to RabbitMQ/SMTP
+     * without exposing the generated registration code to the frontend for security reasons.
+     *
+     * @PostMapping(path="/invite")
+     * @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+     * public ResponseEntity<String> inviteUser(@Valid @RequestBody CreateInvitationRequest invitationRequest) {
+     *     invitationService.createInvitation(invitationRequest);
+     *     return new ResponseEntity<>("Invitation successfully created and sent.", HttpStatus.CREATED);
+     * }
+     * =====================================================================================
+     */
+
     /**
-     * Generates a new invitation code and initiates the email delivery process.
+     * DEMO MODE METHOD
+     * Generates a new invitation code and explicitly returns it in the JSON response payload.
+     * This allows recruiters, evaluators, and public testers to easily retrieve the code directly
+     * from the frontend modal without needing access to an actual email inbox.
      *
      * @param invitationRequest DTO containing invitee details.
-     * @return ResponseEntity with a success message.
+     * @return ResponseEntity with a success message and the generated invite code.
      */
     @PostMapping(path="/invite")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<String> inviteUser(@Valid @RequestBody CreateInvitationRequest invitationRequest) {
-        invitationService.createInvitation(invitationRequest);
-        return new ResponseEntity<>("Invitation successfully created and sent.", HttpStatus.CREATED);
+    public ResponseEntity<java.util.Map<String, String>> inviteUser(@Valid @RequestBody CreateInvitationRequest invitationRequest) {
+
+        String generatedCode = invitationService.createInvitation(invitationRequest);
+
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Invitation successfully created. (DEMO MODE)");
+        response.put("code", generatedCode);
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

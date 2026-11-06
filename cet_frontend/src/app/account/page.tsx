@@ -3,14 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
-import { useLanguage } from '@/context/LanguageContext';
 
 /**
  * AccountPage Component
  * Provides a user interface for managing account settings, including username and password updates.
  */
 export default function AccountPage() {
-  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [newUsernameInput, setNewUsernameInput] = useState('');
   const [role, setRole] = useState('');
@@ -27,7 +25,6 @@ export default function AccountPage() {
   
   const router = useRouter();
 
-  // Load current user data from local storage on component mount
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
     const storedRole = localStorage.getItem('user_role');
@@ -41,16 +38,35 @@ export default function AccountPage() {
   }, [router]);
 
   /**
+   * Validates password strength via regex.
+   * Requires: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special character.
+   */
+  const validatePassword = (pass: string) => {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return regex.test(pass);
+  };
+
+  /**
    * Handles password update request.
-   * Validates matching passwords before sending the API request.
+   * Validates matching passwords, checks against the old password, and enforces strength rules.
    */
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordMessage('');
     setPasswordError('');
 
+    if (oldPassword === newPassword) {
+      setPasswordError('New password cannot be the same as the old password.');
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
-      setPasswordError(t('errorPasswordMismatch'));
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+
+    if (!validatePassword(newPassword)) {
+      setPasswordError('Password must contain at least 8 characters, an uppercase letter, a number, and a special character.');
       return;
     }
 
@@ -59,13 +75,13 @@ export default function AccountPage() {
         params: { oldPassword, newPassword }
       });
       
-      setPasswordMessage(t('msgPasswordUpdated'));
+      setPasswordMessage('Password successfully updated!');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
       console.error('Password update error:', err);
-      setPasswordError(err.response?.data?.message || err.response?.data || t('errorUpdatePassword'));
+      setPasswordError(err.response?.data?.message || err.response?.data || 'Failed to update password.');
     }
   };
 
@@ -80,34 +96,28 @@ export default function AccountPage() {
 
     try {
       await api.patch('/users/me/username', { newUsername: newUsernameInput });
-      setUsernameMessage(t('msgUsernameUpdated'));
+      setUsernameMessage("Username successfully updated. Please log in again.");
       
       setTimeout(() => {
-        const savedLanguage = localStorage.getItem("language");
         localStorage.clear();
-        
-        if (savedLanguage) {
-          localStorage.setItem("language", savedLanguage);
-        }
-        
         router.push('/auth');
       }, 2000);
     } catch (err: any) {
       console.error('Username update error:', err);
-      setUsernameError(err.response?.data?.message || err.response?.data || t('errorUpdateUsername'));
+      setUsernameError(err.response?.data?.message || err.response?.data || "Failed to update username");
     }
   };
 
   return (
     <div className="p-8 w-full max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">{t('accountSettingsTitle')}</h1>
-        <p className="text-gray-500 mt-1">{t('accountSettingsDesc')}</p>
+        <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
+        <p className="text-gray-500 mt-1">Manage your profile details and security settings.</p>
       </div>
 
       {/* Profile Information Section */}
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-6">
-        <h2 className="text-xl font-bold text-gray-900 border-b pb-4">{t('profileInfoTitle')}</h2>
+        <h2 className="text-xl font-bold text-gray-900 border-b pb-4">Profile Information</h2>
         
         {usernameMessage && (
           <div className="p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg font-medium">
@@ -123,7 +133,7 @@ export default function AccountPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('currentUsernameLabel')}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Current Username</label>
             <input
               type="text"
               disabled
@@ -132,7 +142,7 @@ export default function AccountPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('roleLabel')}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
             <input
               type="text"
               disabled
@@ -144,7 +154,7 @@ export default function AccountPage() {
         
         <form onSubmit={handleUsernameChange} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('newUsernameLabel')}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">New Username</label>
             <div className="flex gap-4">
               <input
                 required
@@ -152,17 +162,17 @@ export default function AccountPage() {
                 value={newUsernameInput}
                 onChange={(e) => setNewUsernameInput(e.target.value)}
                 className="w-full md:w-1/2 px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900"
-                placeholder={t('newUsernamePlaceholder')}
+                placeholder="Enter new username"
               />
               <button
                 type="submit"
                 className="px-6 py-2.5 bg-black hover:bg-gray-800 text-white font-medium rounded-lg transition shadow-sm whitespace-nowrap cursor-pointer"
               >
-                {t('changeUsernameBtn')}
+                Change Username
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              {t('usernameChangeWarning')}
+              * You can only change your username once every 30 days.
             </p>
           </div>
         </form>
@@ -170,7 +180,7 @@ export default function AccountPage() {
 
       {/* Password Change Section */}
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-6">
-        <h2 className="text-xl font-bold text-gray-900 border-b pb-4">{t('changePasswordTitle')}</h2>
+        <h2 className="text-xl font-bold text-gray-900 border-b pb-4">Change Password</h2>
 
         {passwordMessage && (
           <div className="p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg font-medium">
@@ -186,38 +196,38 @@ export default function AccountPage() {
 
         <form onSubmit={handlePasswordChange} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('oldPasswordLabel')}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Old Password</label>
             <input
               required
               type="password"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900"
-              placeholder={t('oldPasswordPlaceholder')}
+              placeholder="Enter current password"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('newPasswordLabel')}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
               <input
                 required
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900"
-                placeholder={t('newPasswordPlaceholder')}
+                placeholder="Enter new password"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('confirmNewPasswordLabel')}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
               <input
                 required
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#8e082d] text-gray-900"
-                placeholder={t('confirmNewPasswordPlaceholder')}
+                placeholder="Confirm new password"
               />
             </div>
           </div>
@@ -227,7 +237,7 @@ export default function AccountPage() {
               type="submit"
               className="px-8 py-3 bg-[#8e082d] hover:bg-red-900 text-white font-medium rounded-lg transition shadow-sm cursor-pointer"
             >
-              {t('updatePasswordBtn')}
+              Update Password
             </button>
           </div>
         </form>

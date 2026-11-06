@@ -8,5 +8,23 @@ import com.cet.cet_backend.domain.entities.UserInvitationEntity;
  */
 public interface InvitationService {
 
-     UserInvitationEntity createInvitation(CreateInvitationRequest createInvitationRequest);
+     /*
+      * =====================================================================================
+      * ORIGINAL PRODUCTION METHOD
+      * =====================================================================================
+      * This code was used previously for the production environment.
+      * It returns the full UserInvitationEntity.
+      *
+      * UserInvitationEntity createInvitation(CreateInvitationRequest createInvitationRequest);
+      * =====================================================================================
+      */
+
+     /**
+      * DEMO MODE METHOD
+      * Returns the generated invitation code directly as a String.
+      * This modification allows recruiters, evaluators, and public testers to easily
+      * retrieve the code directly from the frontend modal without needing access
+      * to an actual email inbox.
+      */
+     String createInvitation(CreateInvitationRequest createInvitationRequest);
 }

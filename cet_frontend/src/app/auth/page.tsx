@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { useLanguage } from '@/context/LanguageContext';
@@ -19,8 +19,17 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+
+  // State for Demo Access Modal
+  const [showDemo, setShowDemo] = useState(false);
   
   const router = useRouter();
+
+  // Triggers the Demo Modal to appear shortly after the page loads
+  useEffect(() => {
+    const timer = setTimeout(() => setShowDemo(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   /**
    * Validates password strength via regex.
@@ -158,8 +167,25 @@ export default function AuthPage() {
     }
   };
 
+  /**
+   * DEMO HELPER FUNCTIONS
+   * Auto-fills the login form or copies admin credentials for testing.
+   */
+  const autoFillAdmin = () => {
+    setUsername('admin');
+    setPassword('admin123');
+  };
+
+  const copyUsername = () => {
+    navigator.clipboard.writeText('admin');
+  };
+
+  const copyPassword = () => {
+    navigator.clipboard.writeText('admin123');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 relative">
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 w-full max-w-md">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">{t('appTitle')}</h2>
@@ -297,6 +323,52 @@ export default function AuthPage() {
           </button>
         </div>
       </div>
+
+      {/* DEMO WIDGET - Slides in on the bottom right to facilitate easy testing */}
+      {showDemo && (
+        <div className="fixed bottom-6 right-6 bg-white p-5 rounded-xl shadow-2xl border border-[#8e082d] w-80 z-50">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-bold text-gray-900">Demo Access</h3>
+            <button 
+              onClick={() => setShowDemo(false)} 
+              className="text-gray-400 hover:text-gray-700 font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-xs text-gray-600 mb-3">
+            This is a demo project for testing purposes. Check the github repository for more information and to see how it works.
+          </p>
+
+          <div className="text-xs text-gray-700 mb-4 bg-gray-50 p-2.5 rounded border border-gray-200 space-y-1">
+            <div><strong>Username:</strong> admin</div>
+            <div><strong>Password:</strong> admin123</div>
+          </div>
+
+          <div className="space-y-2">
+            <button 
+              onClick={autoFillAdmin}
+              className="w-full py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded transition shadow-sm cursor-pointer"
+            >
+              Auto-fill Admin Credentials
+            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={copyUsername}
+                className="w-1/2 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium rounded transition border border-gray-200 cursor-pointer"
+              >
+                Copy Username
+              </button>
+              <button 
+                onClick={copyPassword}
+                className="w-1/2 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium rounded transition border border-gray-200 cursor-pointer"
+              >
+                Copy Password
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

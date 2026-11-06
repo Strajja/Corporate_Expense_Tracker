@@ -1,40 +1,101 @@
+version: '3.8'
+
 services:
   cet_backend_db:
     image: postgres:16-alpine
     container_name: cet-postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: cet_db
     ports:
       - "5433:5432"
     volumes:
       - backend_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - cet-network
 
   cet_worker_db:
     image: postgres:16-alpine
     container_name: postgres_worker
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: cet_worker_db
-    ports:
-      - "5434:5432"
     volumes:
       - worker_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - cet-network
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: cet-rabbitmq
     ports:
-      - "5672:5672"
       - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: cet_user
-      RABBITMQ_DEFAULT_PASS: cet_password
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
     restart: unless-stopped
+    networks:
+      - cet-network
+
+  cet_backend:
+    build:
+      context: ./cet_backend
+    container_name: cet-backend-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://cet-postgres:5432/cet_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASS}
+      - SPRING_RABBITMQ_HOST=cet-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=cet_user
+      - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASS}
+    depends_on:
+      - cet_backend_db
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - cet-network
+
+  cet_worker:
+    build:
+      context: ./cet_worker
+    container_name: cet-worker-app
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_worker:5432/cet_worker_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASS}
+      - SPRING_RABBITMQ_HOST=cet-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=cet_user
+      - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASS}
+    depends_on:
+      - cet_worker_db
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - cet-network
+
+  cet_frontend:
+    build:
+      context: ./cet_frontend
+    container_name: cet-frontend-app
+    ports:
+      - "80:3000"
+    depends_on:
+      - cet_backend
+    restart: unless-stopped
+    networks:
+      - cet-network
+
+networks:
+  - cet-network
+    driver: bridge
 
 volumes:
   backend_data:

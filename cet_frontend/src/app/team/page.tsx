@@ -53,6 +53,10 @@ export default function TeamPage() {
   // State variable for viewing detailed user information
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  // DEMO MODE: State variables for capturing and displaying the generated invite code
+  const [generatedDemoCode, setGeneratedDemoCode] = useState<string | null>(null);
+  const [demoInviteeEmail, setDemoInviteeEmail] = useState('');
+
   const router = useRouter();
 
   // Initialize user context from local storage on component mount
@@ -214,8 +218,58 @@ export default function TeamPage() {
     setIsConfirmOpen(true);
   };
 
+  /*
+   * =====================================================================================
+   * ORIGINAL PRODUCTION METHOD
+   * =====================================================================================
+   * This code was used previously for the production environment.
+   * It handles form submission and only displays a success message, assuming
+   * the backend securely handles the email dispatch via RabbitMQ without returning the code.
+   * 
+   * const handleUserSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+   *   e.preventDefault();
+   *   if (isSubmitting) return;
+   *
+   *   const form = e.currentTarget;
+   *   const formData = new FormData(form);
+   *
+   *   setMessage('');
+   *   setError('');
+   *   setIsSubmitting(true);
+   *
+   *   const payload = {
+   *     firstName: formData.get('firstName'),
+   *     lastName: formData.get('lastName'),
+   *     emailAddress: formData.get('emailAddress'),
+   *     dateOfBirth: formData.get('dateOfBirth'),
+   *     hireDate: formData.get('hireDate'),
+   *     role: userFormRole
+   *   };
+   *
+   *   try {
+   *     await api.post('/users/invite', payload);
+   *     form.reset();
+   *     setMessage(`${t('msgInvitationSent')} ${payload.emailAddress} (${userFormRole}).`);
+   *     setActiveTab('team');
+   *   } catch (err: any) {
+   *     console.error('Invite error:', err);
+   *     const errData = err.response?.data;
+   *     setError(typeof errData === 'string' ? errData : errData?.message || t('errorSendInvitation'));
+   *     setIsSubmitting(false);
+   *     return;
+   *   }
+   *
+   *   await fetchData(userRole || '');
+   *   setIsSubmitting(false);
+   * };
+   * =====================================================================================
+   */
+
   /**
+   * DEMO MODE METHOD
    * Handles the submission of the form to invite a new user to the system.
+   * Modified to extract the generated registration code from the backend response
+   * and store it in state to trigger a demo modal for easy testing.
    */
   const handleUserSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -228,20 +282,28 @@ export default function TeamPage() {
     setError('');
     setIsSubmitting(true);
 
+    const emailAddress = formData.get('emailAddress') as string;
     const payload = {
       firstName: formData.get('firstName'),
       lastName: formData.get('lastName'),
-      emailAddress: formData.get('emailAddress'),
+      emailAddress: emailAddress,
       dateOfBirth: formData.get('dateOfBirth'),
       hireDate: formData.get('hireDate'),
       role: userFormRole
     };
 
     try {
-      await api.post('/users/invite', payload);
+      const response = await api.post('/users/invite', payload);
       form.reset();
-      setMessage(`${t('msgInvitationSent')} ${payload.emailAddress} (${userFormRole}).`);
-      setActiveTab('team');
+      
+      // DEMO WIDGET: Extract code from response and set state to show modal
+      if (response.data && response.data.code) {
+        setGeneratedDemoCode(response.data.code);
+        setDemoInviteeEmail(emailAddress);
+      } else {
+        setMessage(`${t('msgInvitationSent')} ${payload.emailAddress} (${userFormRole}).`);
+      }
+      
     } catch (err: any) {
       console.error('Invite error:', err);
       const errData = err.response?.data;
@@ -359,7 +421,7 @@ export default function TeamPage() {
   };
 
   return (
-    <div className="p-8 w-full max-w-7xl mx-auto space-y-8">
+    <div className="p-8 w-full max-w-7xl mx-auto space-y-8 relative">
       <style>
         {`
           .custom-scrollbar::-webkit-scrollbar { height: 6px; }
@@ -866,6 +928,52 @@ export default function TeamPage() {
                 className="bg-red-600 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors shadow-sm cursor-pointer"
               >
                 {t('confirmBtn')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DEMO WIDGET - Invitation Code Modal */}
+      {generatedDemoCode && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all border border-[#8e082d]">
+            <div className="p-6 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Invitation Generated! (Demo Mode)</h3>
+              <p className="text-gray-600 text-sm mb-6">
+                Instead of waiting for an email to be sent to <strong>{demoInviteeEmail}</strong>, copy the code below to instantly test the registration process.
+              </p>
+              
+              <div className="bg-gray-100 p-4 rounded-lg flex justify-between items-center border border-gray-200 mb-6">
+                <code className="text-[#8e082d] font-mono font-bold text-lg select-all">
+                  {generatedDemoCode}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedDemoCode);
+                    setMessage('Code copied to clipboard!');
+                  }}
+                  className="bg-white px-3 py-1 text-sm font-bold text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition cursor-pointer"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 px-6 py-4 flex justify-end">
+              <button 
+                onClick={() => {
+                  setGeneratedDemoCode(null);
+                  setActiveTab('team');
+                }}
+                className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800 transition-colors cursor-pointer w-full"
+              >
+                Close & Return to Team
               </button>
             </div>
           </div>

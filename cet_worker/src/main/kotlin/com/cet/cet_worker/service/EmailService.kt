@@ -19,6 +19,7 @@ class EmailService(
 
     /**
      * Sends an email to the manager requesting expense approval, attaching the generated PDF receipt.
+     * Modified for DEMO MODE: Simulates the email sending to prevent SMTP errors during local testing.
      */
     fun sendApprovalRequest(expense: ExpenseDto, pdfPath: String) {
         val managerEmail = expense.managerEmail
@@ -27,39 +28,71 @@ class EmailService(
             return
         }
 
-        val message: MimeMessage = mailSender.createMimeMessage()
-        val helper = MimeMessageHelper(message, true)
+        /*
+         * =====================================================================================
+         * ORIGINAL PRODUCTION METHOD
+         * =====================================================================================
+         * val message: MimeMessage = mailSender.createMimeMessage()
+         * val helper = MimeMessageHelper(message, true)
+         *
+         * helper.setTo(managerEmail)
+         * helper.setSubject("New Expense Pending Approval: ${expense.description}")
+         * helper.setText(
+         *     "Dear Manager,\n\nEmployee ${expense.employeeFirstName ?: ""} (ID: ${expense.employeeId}) has submitted a new expense for approval.\n\n" +
+         *             "Amount: ${expense.amount} RSD\n" +
+         *             "Category: ${expense.category}\n" +
+         *             "Description: ${expense.description}\n\n" +
+         *             "Please find the generated PDF report attached.\n\nBest regards,\nCET System"
+         * )
+         *
+         * val pdfFile = File(pdfPath)
+         * if (pdfFile.exists()) {
+         *     helper.addAttachment("Expense_${expense.id}.pdf", FileSystemResource(pdfFile))
+         * }
+         *
+         * mailSender.send(message)
+         * println("Email with PDF successfully sent to manager at: $managerEmail")
+         * =====================================================================================
+         */
 
-        helper.setTo(managerEmail)
-        helper.setSubject("New Expense Pending Approval: ${expense.description}")
-        helper.setText(
-            "Dear Manager,\n\nEmployee ${expense.employeeFirstName ?: ""} (ID: ${expense.employeeId}) has submitted a new expense for approval.\n\n" +
-                    "Amount: ${expense.amount} RSD\n" +
-                    "Category: ${expense.category}\n" +
-                    "Description: ${expense.description}\n\n" +
-                    "Please find the generated PDF report attached.\n\nBest regards,\nCET System"
-        )
-
-        val pdfFile = File(pdfPath)
-        if (pdfFile.exists()) {
-            helper.addAttachment("Expense_${expense.id}.pdf", FileSystemResource(pdfFile))
-        }
-
-        mailSender.send(message)
-        println("Email with PDF successfully sent to manager at: $managerEmail")
+        // DEMO MODE: Log to console instead of sending an actual email via SMTP
+        println("=========================================================")
+        println("DEMO WORKER - RabbitMQ successfully processed PDF Approval Request!")
+        println("Simulating email with PDF attachment to manager: $managerEmail")
+        println("Expense Description: ${expense.description}")
+        println("Amount: ${expense.amount} RSD")
+        println("=========================================================")
     }
 
     /**
-     * Sends a registration invitation email containing an activation code to a new user.
+     * DEMO MODE METHOD
+     * Simulates sending a registration invitation email containing an activation code to a new user.
+     * Instead of actually dispatching the email via SMTP, it prints the payload to the console.
+     * This allows testing the async RabbitMQ pipeline without requiring valid SMTP credentials.
      */
     fun sendCodeForRegistration(emailAddress: String?, firstName: String?, code: String?) {
-        val message: MimeMessage = mailSender.createMimeMessage()
-        val helper = MimeMessageHelper(message, false)
+        /*
+         * =====================================================================================
+         * ORIGINAL PRODUCTION METHOD
+         * =====================================================================================
+         * val message: MimeMessage = mailSender.createMimeMessage()
+         * val helper = MimeMessageHelper(message, false)
+         *
+         * helper.setTo(emailAddress ?: return)
+         * helper.setSubject("Registration Invitation")
+         * helper.setText("Hello ${firstName ?: ""},\n\nYour registration code is: $code")
+         *
+         * mailSender.send(message)
+         * =====================================================================================
+         */
 
-        helper.setTo(emailAddress ?: return)
-        helper.setSubject("Registration Invitation")
-        helper.setText("Hello ${firstName ?: ""},\n\nYour registration code is: $code")
+        if (emailAddress == null) return
 
-        mailSender.send(message)
+        // DEMO MODE: Console output to prove that RabbitMQ Consumer works
+        println("=========================================================")
+        println("DEMO WORKER - RabbitMQ successfully received the message!")
+        println("Simulating email dispatch to: $emailAddress")
+        println("Generated registration code: $code")
+        println("=========================================================")
     }
 }
