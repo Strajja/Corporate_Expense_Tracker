@@ -1,33 +1,35 @@
-name: Build and Push Docker Images
+name: Build and Deploy CET to Azure
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+      - name: Copy project to Azure VM
+        uses: appleboy/scp-action@master
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          host: ${{ secrets.AZURE_HOST }}
+          username: ${{ secrets.AZURE_USER }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          source: "."
+          target: "/home/${{ secrets.AZURE_USER }}/cet-app"
 
-      - name: Build and push Backend
-        uses: docker/build-push-action@v5
+      - name: Build and Start Containers on Azure
+        uses: appleboy/ssh-action@master
         with:
-          context: ./cet_backend
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cet-backend:latest
-
-      - name: Build and push Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./cet_frontend
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cet-frontend:latest
+          host: ${{ secrets.AZURE_HOST }}
+          username: ${{ secrets.AZURE_USER }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.AZURE_USER }}/cet-app
+            echo "DB_PASS=${{ secrets.PROD_DB_PASS }}" > .env
+            echo "RABBIT_PASS=${{ secrets.PROD_RABBIT_PASS }}" >> .env
+            docker-compose down
+            docker-compose up -d --build
