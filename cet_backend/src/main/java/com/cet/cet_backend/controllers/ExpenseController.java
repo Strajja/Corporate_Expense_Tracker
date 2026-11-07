@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Controller managing CRUD operations and status updates for expenses.
  */
-@CrossOrigin(origins = "http://57.174.232.38")
+@CrossOrigin(origins = "http://cet.swedencentral.cloudapp.azure.com")
 @RestController
 @RequestMapping(path = "/expenses")
 public class    ExpenseController {

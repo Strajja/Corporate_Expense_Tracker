@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Controller handling user authentication and registration requests.
  */
-@CrossOrigin(origins = "http://57.174.232.38")
+@CrossOrigin(origins = "http://cet.swedencentral.cloudapp.azure.com")
 @RestController
 public class AuthController {
 

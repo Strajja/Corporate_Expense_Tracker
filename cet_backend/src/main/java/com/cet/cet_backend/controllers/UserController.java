@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * Controller managing user accounts, team assignments, and system invitations.
  */
-@CrossOrigin(origins = "http://57.174.232.38")
+@CrossOrigin(origins = "http://cet.swedencentral.cloudapp.azure.com")
 @RestController
 @RequestMapping(path = "/users")
 public class UserController {
