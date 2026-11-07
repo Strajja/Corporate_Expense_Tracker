@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Initialize Axios instance with backend base URL and default JSON headers
 const api = axios.create({
-  baseURL: 'http://cet.swedencentral.cloudapp.azure.com:8080',
+  baseURL: 'http://cet.swedencentral.cloudapp.azure.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
