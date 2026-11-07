@@ -94,7 +94,7 @@ services:
       - cet-network
 
 networks:
-  - cet-network
+  cet-network:
     driver: bridge
 
 volumes:
